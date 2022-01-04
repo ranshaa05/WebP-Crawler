@@ -1,12 +1,9 @@
-from webptools import cwebp
 import os
 from pathlib import Path
 from shutil import copytree, ignore_patterns
-from elevate import elevate
+from PIL import Image, UnidentifiedImageError
 
-elevate() #needed for os.isdir()
     
-
 
 print("Enter path to root folder (a folder that contains either images or folders with images within it):")
 img_path = input()
@@ -16,18 +13,18 @@ while not os.path.isdir(img_path):
 dst_create_folder_name = os.path.basename(os.path.normpath(img_path)) #base folder name to create in dst
 
     
-print("Enter Destination folder for completed conversions:")
+print("\nEnter Destination folder for completed conversions:")
 dst_path = input() + "\\" #initial destination
 if not os.path.isdir(dst_path[:-1]):
     print("Path does not exist. Please specify a new one:")
     dst_path = input() + "\\"
 
-print("Converted image quality: (0-100)")
-quality = input()
+print("\nConverted image quality: (0-100 or 'lossless')")
+quality = input().lower()
 if quality == "":
     quality = "100"
 
-while not quality.isnumeric() or int(quality) < 0 or int(quality) > 100:
+while (not quality.isnumeric() or int(quality) < 0 or int(quality) > 100) and quality != "lossless":
     print("Quality must be between 0 and 100:")
     quality = str(int(input()))
 
@@ -58,15 +55,18 @@ for i in file_list:
     print("Converting " + os.path.basename(new_dst_path) + "...", end=" " * (last_iter_length - len(os.path.basename(new_dst_path))) + "\r")
     last_iter_length = len(os.path.basename(new_dst_path))
 
-    cwebp_output = cwebp(input_image='"' + str(i) + '"', output_image=('"' + new_dst_path + '"')[:new_dst_path.rfind(".")] + ".webp", option="-q " + quality, logging="")  #create webp files. # the quotes are a workaround for a bug in cwebp
-    
-
-    if cwebp_output["exit_code"] != 0:
-        num_of_non_image_files += 1
-    else:
+    try:
+        image = Image.open(i)
+        if quality == "lossless":
+            image.save(new_dst_path[:new_dst_path.rfind(".")] + ".webp", format="webp", lossless=True)
+        
+        else:
+            image.save(new_dst_path[:new_dst_path.rfind(".")] + ".webp", format="webp", quality=int(quality))
         num_of_image_files += 1
     
-    
+    except UnidentifiedImageError:
+        num_of_non_image_files += 1
+
 
 
 if num_of_image_files > 0:
