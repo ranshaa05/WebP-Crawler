@@ -19,14 +19,16 @@ if not os.path.isdir(dst_path[:-1]):
     print("Path does not exist. Please specify a new one:")
     dst_path = input() + "\\"
 
+while img_path in dst_path:                                                                            #this is to prevent converted images from being endlessly re-converted.
+    print("\nDestination cannot be contained within the source folder. Please specify a new one:")
+    dst_path = input() + "\\"
+
 print("\nConverted image quality: (0-100 or 'lossless')")
 quality = input().lower()
-if quality == "":
-    quality = "100"
 
-while (not quality.isnumeric() or int(quality) < 0 or int(quality) > 100) and quality != "lossless":
+while (not quality.isnumeric() or int(quality) < 0 or int(quality) > 100) and quality != "lossless" and quality != "":
     print("Quality must be between 0 and 100:")
-    quality = str(int(input()))
+    quality = input()
 
 
 def ignore_files(folder, files):                                                                        #|
@@ -57,11 +59,11 @@ for i in file_list:
 
     try:
         image = Image.open(i)
-        if quality == "lossless":
+        if quality == "lossless" or quality == "":
             image.save(new_dst_path[:new_dst_path.rfind(".")] + ".webp", format="webp", lossless=True)
         
         else:
-            image.save(new_dst_path[:new_dst_path.rfind(".")] + ".webp", format="webp", quality=int(quality))
+            image.save(new_dst_path[:new_dst_path.rfind(".")] + ".webp", format="webp", quality= int(quality))
         num_of_image_files += 1
     
     except UnidentifiedImageError:
