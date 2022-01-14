@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from shutil import copytree, ignore_patterns
+from shutil import copytree, ignore_patterns, copyfile
 from PIL import Image, UnidentifiedImageError
 
     
@@ -51,10 +51,11 @@ for i in files:
 num_of_image_files = 0
 num_of_non_image_files = 0
 last_iter_length = 0
+non_image_files = []
 
 for i in file_list:
     new_dst_path = dst_path + os.path.basename(img_path) + str(str(i).split(img_path)[1]) #destination to original tree path
-    print("Converting " + os.path.basename(new_dst_path) + "...", end=" " * (last_iter_length - len(os.path.basename(new_dst_path))) + "\r")
+    print(f"Converting {os.path.basename(new_dst_path)}...", end=" " * (last_iter_length - len(os.path.basename(new_dst_path))) + "\r")
     last_iter_length = len(os.path.basename(new_dst_path))
 
     try:
@@ -68,13 +69,20 @@ for i in file_list:
     
     except UnidentifiedImageError:
         num_of_non_image_files += 1
-
+        non_image_files.append(i)
 
 
 if num_of_image_files > 0:
-    print("Successfully converted " + str(num_of_image_files) + " files!")
+    print(f"\033[A\nSuccessfully converted {num_of_image_files} files!" + " " * last_iter_length)
 
 if num_of_non_image_files >= 1:
-    print("Could not convert " + str(num_of_non_image_files) + " files. Are they not images?")
+    print(f"Could not convert {num_of_non_image_files} file(s). They are most likely not images. Would you like to copy them anyway? (y/n):")
+    copy_non_images = input().lower()
+    if copy_non_images == "y" or copy_non_images == "yes":
+        for i in non_image_files:
+            copyfile(i, dst_path + os.path.basename(img_path) + str(str(i).split(img_path)[1]))
+        print(f"Copied {num_of_non_image_files} files.")
+    else:
+        pass
 
 input("\nPress any key to exit...")
