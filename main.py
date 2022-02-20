@@ -4,47 +4,47 @@ from shutil import copytree, ignore_patterns, copyfile
 from PIL import Image, UnidentifiedImageError
 from tkinter import filedialog
 
-    
+def get_path():
+    return filedialog.askdirectory(mustexist=True, title="Select Destination Folder").replace("/", "\\")
 
-print("Enter path to source folder (a folder that contains either images or folders with images within it):")
-src_path = filedialog.askdirectory(mustexist=True).replace("/", "\\")
-if src_path == "":
+print("Select path to source folder (a folder that contains either images or folders with images within it):")
+src_path = get_path()
+if not src_path:
     print("No path entered. Exiting...")
     exit()
-
 print(src_path)
 dst_create_folder_name = os.path.basename(os.path.normpath(src_path)) #base folder name to create in dst
 
-print("\nEnter Destination folder for completed conversions:")
-dst_path = filedialog.askdirectory(mustexist=True).replace("/", "\\") + "\\" #initial destination
+print("\nSelect Destination folder for completed conversions:")
+dst_path = get_path() + "\\" #initial destination
 if dst_path == "\\":
     print("No path entered. Exiting...")
     exit()
 
-while src_path in dst_path:                                                                            #this is to prevent converted images from being endlessly re-converted.
+while src_path in dst_path:     #this is to prevent converted images from being endlessly re-converted.
     print("\nDestination cannot be contained within the source folder. Please specify a new one:")
-    dst_path = filedialog.askdirectory(mustexist=True).replace("/", "\\") + "\\"
+    dst_path = get_path() + "\\"
 print(dst_path)
 
 print("\nConverted image quality: (0-100 or 'lossless')")
 quality = input().lower()
 
-while (not quality.isnumeric() or int(quality) < 0 or int(quality) > 100) and quality != "lossless" and quality != "":
+while (not quality.isnumeric() or not int(quality) in range(101)) and quality != "lossless" and quality != "":
     print("Quality must be between 0 and 100:")
     quality = input()
 
 
-def ignore_files(folder, files):                                                                        #|
-    return [f for f in files if not os.path.isdir(os.path.join(folder, f))]                             #|
-                                                                                                        #|  copies the directory tree to the destination.
-try:                                                                                                    #|
-    copytree(src_path, dst_path + dst_create_folder_name,symlinks=False,ignore=ignore_files)            #|
+def ignore_files(folder, files):                                                                #|
+    return [f for f in files if not os.path.isdir(os.path.join(folder, f))]                     #|
+                                                                                                #|  copies the directory tree to the destination.
+try:                                                                                            #|
+    copytree(src_path, dst_path + dst_create_folder_name,symlinks=False,ignore=ignore_files)    #|
 except FileExistsError:
     print("\nDirectory already exists! No files have been converted.")
     exit()
 
 
-file_list = list(Path(src_path).rglob("*.*"))
+file_list = Path(src_path).rglob("*.*")
 
 
 num_of_image_files = 0
@@ -53,7 +53,7 @@ last_iter_length = 0
 non_image_files = []
 
 for i in file_list:
-    new_dst_path = dst_path + os.path.basename(src_path) + str(str(i).split(src_path)[1]) #destination to original tree path
+    new_dst_path = dst_path + os.path.basename(src_path) + str(i).split(src_path)[1] #destination to original tree path
     print(f"Converting {os.path.basename(new_dst_path)}...", end=" " * (last_iter_length - len(os.path.basename(new_dst_path))) + "\r")
     last_iter_length = len(os.path.basename(new_dst_path))
 
