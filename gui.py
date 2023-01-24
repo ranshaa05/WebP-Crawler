@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog #tkinter bug
-from tkinter import StringVar
+from tkinter import IntVar
 from os import path
 
 
@@ -28,7 +28,7 @@ class Gui():
         self.progressbar = None
         self.progressbar_text = None
 
-        self.progress = StringVar()
+        self.progress = IntVar()
 
 
     def check_params(self, src_path, dst_path):
@@ -60,9 +60,8 @@ class Gui():
         self.quality_dropdown = ttk.Combobox(self.root, state="readonly", width=15)
         self.quality_dropdown["values"] = ("Lossless", *[str(i) for i in range(100, -1, -1)])
         self.quality_dropdown.current(0)
-        #TODO: add a line that says the progress of the progressbar and the number of files converted/total files
-        self.progressbar_text = tk.Label(self.root, textvariable=self.progress.get() + "%", font=('Helvetica 20 italic'))
-        print(self.progress.get())
+        #TODO: find a way to add a "%" to the end of progressbar_text"
+        self.progressbar_text = tk.Label(self.root, textvariable=self.progress)
 
         self.progressbar = ttk.Progressbar(self.root, variable=self.progress, orient="horizontal", length=300, mode="determinate")
 
@@ -84,6 +83,7 @@ class Gui():
             browse_button.grid(row=i+3, column=3)
             self.fields.append(path_field)
         
+
     def update_progressbar(self):
         self.progressbar.update()
 
