@@ -55,22 +55,10 @@ class AppLogic():
             total_num_of_files += 1
             self.progress.set(int((total_num_of_files / len(list(file_list))) * 100))
             self.update_progressbar()
+        
 
-
-        # if self.num_of_image_files > 0:
-        #     print(f"\033[A\nSuccessfully converted {self.num_of_image_files} file(s)!" + " " * last_iter_length)
-
-        # if self.num_of_non_image_files >= 1:
-        #     print(f"Could not convert {self.num_of_non_image_files} file(s). They are most likely not images. Would you like to copy them anyway? (y/n):")
-        #     copy_non_images = input().lower()
-        #     while not copy_non_images == "y" and not copy_non_images == "yes" and not copy_non_images == "n" and not copy_non_images == "no":
-        #         print("Invalid input. Try again.") #TODO: will not be needed in GUI version
-        #         copy_non_images = input().lower()
-        #     if copy_non_images == "y" or copy_non_images == "yes":
-        #         for i in self.non_image_files:
-        #             copyfile(i, dst_path + os.path.basename(src_path) + str(str(i).split(src_path)[1]))
-        #         print(f"Copied {self.num_of_non_image_files} file(s).")
-        #     elif copy_non_images == "n" or copy_non_images == "no":
-        #         pass
-
-                
+        if self.post_conversion_dialogue(num_of_image_files, num_of_non_image_files):
+            for i in non_image_files:
+                copyfile(i, dst_path + "\\" + os.path.basename(src_path) + str(str(i).split(src_path)[1]))
+        self.progress.set(0)
+        

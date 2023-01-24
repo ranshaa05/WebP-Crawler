@@ -88,6 +88,21 @@ class Gui():
         self.progressbar.update()
 
 
+    def post_conversion_dialogue(self, num_of_images, num_of_non_images):
+        if num_of_images == 0:
+            tk.messagebox.showerror("Error", "No images were found in source folder.")
+            return False
+        elif num_of_non_images > 0:
+            return tk.messagebox.askyesno(
+"Copy non-images?",
+f"""{num_of_images} files were successfully converted.
+{num_of_non_images} files could not be converted. they are most likely not images.
+Copy non-images to destination folder?"""
+)
+        else:
+            tk.messagebox.showinfo("Conversion complete", f"{num_of_images} files were successfully converted.")
+            return False
+
 if __name__ == '__main__':
     gui = Gui()
     gui.build_window()
