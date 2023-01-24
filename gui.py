@@ -1,12 +1,14 @@
 import tkinter as tk
 from tkinter import ttk
-from tkinter import messagebox
 from tkinter import filedialog #tkinter bug
+from tkinter import StringVar
 from os import path
+
+
 import converter
 
 
-class Gui:
+class Gui():
     def __init__(self, root=None):
         if not root:
             self.root = tk.Tk()
@@ -19,20 +21,20 @@ class Gui:
         self.box1_text = None
         self.box2_text = None
         self.box3_text = None
+        self.box4_text = None
         self.start_button = None
-        self.quality_lossless_button = None
         self.quality_dropdown = None
         self.fields = None
-        self.app_logic = converter.AppLogic()
+        self.progressbar = None
+        self.progressbar_text = None
 
-        self.build_window()
+        self.progress = StringVar()
 
-        self.root.mainloop()
 
-    def check_params(self, src_path, dst_path, quality):
-        if src_path == "" or dst_path == "\\":                          #check if paths are usable
+    def check_params(self, src_path, dst_path):
+        if src_path == "" or dst_path == "\\":  #check if paths are usable
             tk.messagebox.showerror("Error", "You must enter a source and destination path.")
-        elif src_path + "\\" == dst_path:
+        elif src_path == dst_path:
             tk.messagebox.showerror("Error", "Source and destination folders cannot be the same.")
         elif not path.exists(src_path):
             tk.messagebox.showerror("Error", "Source folder does not exist.\nPlease select a different folder.")
@@ -40,25 +42,12 @@ class Gui:
             tk.messagebox.showerror("Error", "Destination folder does not exist.\nPlease select a different folder.")
         elif path.isdir(dst_path + path.basename(src_path)):    #TODO: maybe add an option to override current folder?
             tk.messagebox.showerror("Error", f'Destination folder already has a folder named "{path.basename(src_path)}" in it.\nPlease select a different destination folder.')
-        
-        elif quality == "Select...":                        #check if quality value is set
-            tk.messagebox.showinfo("Info", "Please select a quality value.")
 
         else:
-            return src_path, dst_path, quality
-
-    def convert(self):
-        src_path = self.fields[0].get()
-        dst_path = self.fields[1].get() + "\\"
-        quality = self.quality_dropdown.get()
-        
-        if self.check_params(src_path, dst_path, quality):
-            self.app_logic.create_folder_tree(src_path, dst_path)
-            self.app_logic.convert(src_path, dst_path, quality)
-
+            return src_path, dst_path
 
     def browse(self, path_field, field_num):
-       path = tk.filedialog.askdirectory(mustexist=True, title="Select Destination Folder").replace("/", "\\")
+       path = (tk.filedialog.askdirectory(mustexist=True, title="Select Destination Folder").replace("/", "\\"))
        path_field[field_num].delete(0, tk.END)
        path_field[field_num].insert(0, path)
 
@@ -66,21 +55,25 @@ class Gui:
         self.header = tk.Label(self.root, text="Enter path:")
         self.box1_text = tk.Label(self.root, text="Source folder:")
         self.box2_text = tk.Label(self.root, text="Destination folder:")
-        self.start_button = tk.Button(self.root, text="Start", command=self.convert)
+        self.start_button = tk.Button(self.root, text="Start", command=lambda: converter.AppLogic.convert(self))
         self.box3_text = tk.Label(self.root, text="Quality:")
-        self.quality_lossless_button = tk.Button(self.root, text="Lossless", command=lambda: dropdown_text.set("Lossless"))
-        dropdown_text = tk.StringVar(self.root)
-        dropdown_text.set("Select...")
-        self.quality_dropdown = ttk.Combobox(self.root, textvariable=dropdown_text, state="readonly", width=15)
-        self.quality_dropdown["values"] = ("Select...", *[str(i) for i in range(100, -1, -1)])
+        self.quality_dropdown = ttk.Combobox(self.root, state="readonly", width=15)
+        self.quality_dropdown["values"] = ("Lossless", *[str(i) for i in range(100, -1, -1)])
+        self.quality_dropdown.current(0)
+        #TODO: add a line that says the progress of the progressbar and the number of files converted/total files
+        self.progressbar_text = tk.Label(self.root, textvariable=self.progress.get() + "%", font=('Helvetica 20 italic'))
+        print(self.progress.get())
+
+        self.progressbar = ttk.Progressbar(self.root, variable=self.progress, orient="horizontal", length=300, mode="determinate")
 
         self.header.grid(row=0, column=2, columnspan=1)
         self.box1_text.grid(row=3, column=1, sticky="w")
         self.box2_text.grid(row=4, column=1, sticky="w")
         self.box3_text.grid(row=5, column=1, sticky="w")
         self.quality_dropdown.grid(row=5, column=2, sticky="w")
-        self.quality_lossless_button.grid(row=5, column=2)
         self.start_button.grid(row=6, column=2)
+        self.progressbar_text.grid(row=7, column=2)
+        self.progressbar.grid(row=8, column=2)
         
 
         self.fields = []
@@ -90,7 +83,13 @@ class Gui:
             browse_button = tk.Button(self.root, text="Browse...", command=lambda field_num=i: self.browse(self.fields, field_num))
             browse_button.grid(row=i+3, column=3)
             self.fields.append(path_field)
+        
+    def update_progressbar(self):
+        self.progressbar.update()
 
 
 if __name__ == '__main__':
-    Gui()
+    gui = Gui()
+    gui.build_window()
+    gui.root.mainloop()
+    
