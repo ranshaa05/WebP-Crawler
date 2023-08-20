@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import filedialog  # tkinter bug
-from tkinter import IntVar
+from tkinter import IntVar, StringVar
 from os import path
 
 
@@ -28,7 +28,11 @@ class Gui:
         self.progressbar = None
         self.progressbar_text = None
 
-        self.progress = IntVar()
+        self.progress = StringVar()
+        self.progress.set("0%")
+        self.display_progress = (
+            IntVar()
+        )  # hacky way to include the "%" sign in the progressbar text
 
     def check_params(self, src_path, dst_path):
         if src_path == "" or dst_path == "\\":  # check if paths are usable
@@ -86,7 +90,7 @@ class Gui:
 
         self.progressbar = ttk.Progressbar(
             self.root,
-            variable=self.progress,
+            variable=self.display_progress,
             orient="horizontal",
             length=300,
             mode="determinate",
@@ -129,7 +133,7 @@ Copy non-images to destination folder?""",
             )
         else:
             tk.messagebox.showinfo(
-                "Conversion complete",
+                "Conversion complete!",
                 f"{num_of_images} files were successfully converted.",
             )
             return False

@@ -74,7 +74,10 @@ class AppLogic:
                 non_image_files.append(i)
 
             total_num_of_files += 1
-            self.progress.set(int((total_num_of_files / len(list(file_list))) * 100))
+            self.progress.set(
+                f"{int((total_num_of_files / len(list(file_list))) * 100)}%"
+            )
+            self.display_progress.set(str(self.progress.get()).strip("%"))
             self.update_progressbar()
 
         if self.post_conversion_dialogue(num_of_image_files, num_of_non_image_files):
@@ -86,4 +89,7 @@ class AppLogic:
                     + os.path.basename(src_path)
                     + str(str(i).split(src_path)[1]),
                 )
-        self.progress.set(0)
+
+        # Reset progress bar
+        self.progress.set("0%")
+        self.display_progress.set("0")
