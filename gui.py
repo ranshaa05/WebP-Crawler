@@ -19,7 +19,6 @@ class Gui:
         screen_height = self.root.winfo_screenheight()
         window_size = f"{int(screen_width * 0.32)}x{int(screen_height * 0.2)}"
         self.root.geometry(window_size)
-        print(window_size)
 
         self.header = None
         self.box1_text = None
@@ -60,20 +59,23 @@ class Gui:
             create_destination_folder = CTkMessagebox(
                 title="Destination folder does not exist",
                 message="Destination folder does not exist.\nWould you like to create it?",
-                icon="warning",
+                icon="question",
+                option_1="Yes",
+                option_2="No",
             )
-            if create_destination_folder:
+            if create_destination_folder.get() == "Yes":
                 os.mkdir(dst_path)
-                return src_path, dst_path
+                return True
             else:
                 return False
+
         elif os.path.isdir(os.path.join(dst_path, os.path.basename(src_path))):
             use_folder = CTkMessagebox(title="Destination folder already exists",
                                 message=f"Destination folder already has a folder named {os.path.basename(src_path)} in it.\nWould you like to use it anyway?",
                                 icon="question",
-                                option_1="Cancel",
+                                option_1="Yes",
                                 option_2="No",
-                                option_3="Yes")
+                                )
             if use_folder.get() == "Yes":
                 return src_path, dst_path
 
