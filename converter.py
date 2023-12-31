@@ -48,6 +48,7 @@ class AppLogic:
             non_image_files = []
             are_you_sure = False
             for file in file_list:
+                image = None
                 new_dst_path = f"{dst_path}\\{os.path.basename(src_path) + str(file).split(src_path)[1]}"  # destination to original tree path
 
                 print(
