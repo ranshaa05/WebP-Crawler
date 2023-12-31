@@ -7,6 +7,7 @@ from tkinter import IntVar, StringVar
 
 import converter
 
+
 class Gui:
     def __init__(self, root=None):
         if not root:
@@ -42,18 +43,25 @@ class Gui:
 
     def check_params(self, src_path, dst_path):
         if src_path == "" or dst_path == "\\":  # check if paths are usable
-            CTkMessagebox(title="Error", message="You must enter a source and destination path.", icon="cancel")
+            CTkMessagebox(
+                title="Error",
+                message="You must enter a source and destination path.",
+                icon="cancel",
+                sound=True,
+            )
         elif src_path == dst_path:
             CTkMessagebox(
                 title="Error",
                 message="Source and destination folders cannot be the same.",
                 icon="cancel",
+                sound=True,
             )
         elif not os.path.exists(src_path):
             CTkMessagebox(
                 title="Error",
                 message="Source folder does not exist.\nPlease select a different folder.",
                 icon="cancel",
+                sound=True,
             )
         elif not os.path.exists(dst_path):
             create_destination_folder = CTkMessagebox(
@@ -70,12 +78,13 @@ class Gui:
                 return False
 
         elif os.path.isdir(os.path.join(dst_path, os.path.basename(src_path))):
-            use_folder = CTkMessagebox(title="Destination folder already exists",
-                                message=f"Destination folder already has a folder named {os.path.basename(src_path)} in it.\nWould you like to use it anyway?",
-                                icon="question",
-                                option_1="Yes",
-                                option_2="No",
-                                )
+            use_folder = CTkMessagebox(
+                title="Destination folder already exists",
+                message=f"Destination folder already has a folder named {os.path.basename(src_path)} in it.\nWould you like to use it anyway?",
+                icon="question",
+                option_1="Yes",
+                option_2="No",
+            )
             if use_folder.get() == "Yes":
                 return src_path, dst_path
 
@@ -102,17 +111,20 @@ class Gui:
         self.box1_text = ctk.CTkLabel(self.root, text="Source folder:")
         self.box2_text = ctk.CTkLabel(self.root, text="Destination folder:")
         self.start_button = ctk.CTkButton(
-            self.root, text="Start", command=lambda: converter.AppLogic.convert(self)
+            self.root,
+            text="Start",
+            fg_color=("light_green", "green"),
+            hover_color=("light_red", "red"),
+            command=lambda: converter.AppLogic.convert(self),
         )
         self.box3_text = ctk.CTkLabel(self.root, text="Quality:")
         self.quality_dropdown = ctk.CTkComboBox(
-            self.root, 
+            self.root,
             state="readonly",
             width=100,
-            values=["Lossless", *[str(i) for i in range(100, -1, -1)]]
+            values=["Lossless", *[str(i) for i in range(100, -1, -1)]],
         )
-        self.quality_dropdown.set('Lossless')
-        # TODO: find a way to add a "%" to the end of progressbar_text"
+        self.quality_dropdown.set("Lossless")
         self.progressbar_text = ctk.CTkLabel(self.root, textvariable=self.progress)
 
         self.progressbar = ctk.CTkProgressBar(
@@ -126,7 +138,7 @@ class Gui:
         self.box1_text.grid(row=3, column=1, sticky="w", padx=(10, 0))
         self.box2_text.grid(row=4, column=1, sticky="w", padx=(10, 0))
         self.box3_text.grid(row=5, column=1, sticky="w", padx=(10, 0))
-        self.quality_dropdown.grid(row=5, column=1, sticky="w",padx=(60, 0))
+        self.quality_dropdown.grid(row=5, column=1, sticky="w", padx=(60, 0))
         self.start_button.grid(row=6, column=2)
         self.progressbar_text.grid(row=7, column=2)
         self.progressbar.grid(row=8, column=2)
@@ -134,7 +146,7 @@ class Gui:
         self.fields = []
         for i in range(2):
             path_field = ctk.CTkEntry(self.root, width=250)
-            path_field.grid(row=i + 3, column=2 , pady=(5, 0))
+            path_field.grid(row=i + 3, column=2, pady=(5, 0))
             browse_button = ctk.CTkButton(
                 self.root,
                 text="Browse...",
@@ -159,9 +171,10 @@ class Gui:
     def post_conversion_dialogue(self, num_of_images, num_of_non_images):
         if num_of_images == 0:
             CTkMessagebox(
-                title="Error", 
-                message="No images were found in source folder.", 
-                icon="cancel"
+                title="Error",
+                message="No images were found in source folder.",
+                icon="cancel",
+                sound=True,
             )
             return False
         elif num_of_non_images > 0:
@@ -172,19 +185,19 @@ class Gui:
 Copy non-images to destination folder?""",
                 icon="question",
                 option_1="Yes",
-                option_2="No"
+                option_2="No",
             )
             if copy_non_images.get() == "Yes":
                 return True
             elif copy_non_images.get() == "No":
                 return False
-        
+
         else:
             CTkMessagebox(
                 title="Conversion complete!",
                 message=f"{num_of_images} files were successfully converted!",
                 icon="check",
-                option_1="Ok"
+                option_1="Ok",
             )
             return False
 
@@ -195,13 +208,12 @@ Copy non-images to destination folder?""",
             message=f'File "{file_name}.webp" already exists in the destination folder.\nWould you like to overwrite it?',
             icon="warning",
             option_1="Yes",
-            option_2="No"
+            option_2="No",
         )
         if overwrite.get() == "Yes":
             return True
         elif overwrite.get() == "No":
             return False
-
 
     def confirm_overwrite_all(self):
         overwrite_all = CTkMessagebox(
@@ -209,7 +221,7 @@ Copy non-images to destination folder?""",
             message="Would you like to overwrite all files that already exist in the destination folder?",
             icon="question",
             option_1="Yes",
-            option_2="No"
+            option_2="No",
         )
         if overwrite_all.get() == "Yes":
             return True
@@ -223,13 +235,12 @@ Copy non-images to destination folder?""",
             icon="warning",
             option_1="Yes",
             option_2="No",
-            sound=True
+            sound=True,
         )
         if are_you_sure.get() == "Yes":
             return True
         elif are_you_sure.get() == "No":
             return False
-    
 
     def show_overwrite_dialogues(self, new_dst_path, are_you_sure):
         # check if file already exists and prompt user to overwrite or skip
