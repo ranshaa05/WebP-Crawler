@@ -28,6 +28,7 @@ class Gui:
         self.box4_text = None
         self.start_button = None
         self.quality_dropdown = None
+        self.format_dropdown = None
         self.fields = None
         self.progressbar = None
         self.progressbar_text = None
@@ -115,16 +116,26 @@ class Gui:
             text="Start",
             fg_color=("light_green", "green"),
             hover_color=("light_red", "red"),
-            command=lambda: converter.AppLogic.convert(self),
+            command=lambda: converter.AppLogic.convert(self, self.format_dropdown.get()),
         )
         self.box3_text = ctk.CTkLabel(self.root, text="Quality:")
         self.quality_dropdown = ctk.CTkComboBox(
             self.root,
             state="readonly",
             width=100,
-            values=["Lossless", *[str(i) for i in range(100, -1, -1)]],
+            values=["Lossless", *[str(i) for i in range(95, -1, -1)]],
         )
         self.quality_dropdown.set("Lossless")
+        
+        self.box4_text = ctk.CTkLabel(self.root, text="Format:")
+        self.format_dropdown = ctk.CTkComboBox(
+            self.root,
+            state="readonly",
+            width=100,
+            values=["webp", "png"], #jpeg does not support transparency, so we do not support it.
+        )
+        self.format_dropdown.set("webp")
+
         self.progressbar_text = ctk.CTkLabel(self.root, textvariable=self.progress)
 
         self.progressbar = ctk.CTkProgressBar(
@@ -137,8 +148,10 @@ class Gui:
         self.header.grid(row=0, column=2, columnspan=1)
         self.box1_text.grid(row=3, column=1, sticky="w", padx=(10, 0))
         self.box2_text.grid(row=4, column=1, sticky="w", padx=(10, 0))
-        self.box3_text.grid(row=5, column=1, sticky="w", padx=(10, 0))
-        self.quality_dropdown.grid(row=5, column=1, sticky="w", padx=(60, 0))
+        self.box3_text.grid(row=5, column=1, sticky="w", padx=(10, 0), pady=(5, 0))
+        self.quality_dropdown.grid(row=5, column=1, sticky="w", padx=(60, 0), pady=(5, 0))
+        self.box4_text.grid(row=5, column=3, sticky="w", padx=(0, 0), pady=(5, 0))
+        self.format_dropdown.grid(row=5, column=3, sticky="w", padx=(45, 0), pady=(5, 0))
         self.start_button.grid(row=6, column=2)
         self.progressbar_text.grid(row=7, column=2)
         self.progressbar.grid(row=8, column=2)
@@ -152,7 +165,7 @@ class Gui:
                 text="Browse...",
                 command=lambda field_num=i: self.browse(self.fields, field_num),
             )
-            browse_button.grid(row=i + 3, column=3, pady=(5, 0))
+            browse_button.grid(row=i + 3, column=3, padx=(5, 0), pady=(5, 0))
             self.fields.append(path_field)
 
     def update_progressbar(
@@ -202,10 +215,10 @@ Copy non-images to destination folder?""",
             return False
 
     # file overwrite dialogues
-    def confirm_overwrite_file(self, file_name):
+    def confirm_overwrite_file(self, file_name, selected_format):
         overwrite = CTkMessagebox(
             title="File already exists",
-            message=f'File "{file_name}.webp" already exists in the destination folder.\nWould you like to overwrite it?',
+            message=f'File "{file_name}.{selected_format}" already exists in the destination folder.\nWould you like to overwrite it?',
             icon="warning",
             option_1="Yes",
             option_2="No",
@@ -242,9 +255,9 @@ Copy non-images to destination folder?""",
         elif are_you_sure.get() == "No":
             return False
 
-    def show_overwrite_dialogues(self, new_dst_path, are_you_sure):
+    def show_overwrite_dialogues(self, new_dst_path, are_you_sure, selected_format):
         # check if file already exists and prompt user to overwrite or skip
-        if os.path.isfile(new_dst_path.split(".")[0] + ".webp"):
+        if os.path.isfile(new_dst_path.split(".")[0] + "." + selected_format):
             if self.overwrite_all:
                 return True
 
@@ -252,7 +265,8 @@ Copy non-images to destination folder?""",
                 overwrite_file = self.confirm_overwrite_file(
                     os.path.basename(
                         new_dst_path.split(".")[0]
-                    )  # TODO: this somehow refreshes the window and advances the progress intvar?
+                    ),  # TODO: this somehow refreshes the window and advances the progress intvar?
+                    selected_format
                 )
 
                 if not overwrite_file:

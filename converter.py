@@ -31,7 +31,7 @@ class AppLogic:
         except FileExistsError:
             return False
 
-    def convert(self):
+    def convert(self, selected_format):
         src_path = self.fields[0].get().strip()
         dst_path = self.fields[1].get().strip()
         quality = self.quality_dropdown.get()
@@ -66,7 +66,7 @@ class AppLogic:
                     non_image_files.append(file)
 
                 if image:
-                    if not self.show_overwrite_dialogues(new_dst_path, are_you_sure):
+                    if not self.show_overwrite_dialogues(new_dst_path, are_you_sure, selected_format):
                         num_of_skipped_files += 1
                         image.close()
                         self.update_progressbar(
@@ -79,15 +79,17 @@ class AppLogic:
 
                     if quality == "Lossless":
                         image.save(
-                            new_dst_path[: new_dst_path.rfind(".")] + ".webp",
-                            format="webp",
+                            new_dst_path[: new_dst_path.rfind(".")] + "." + selected_format,
+                            format=selected_format,
                             lossless=True,
+                            subsampling=0,
                         )
                     else:
                         image.save(
-                            new_dst_path[: new_dst_path.rfind(".")] + ".webp",
-                            format="webp",
+                            new_dst_path[: new_dst_path.rfind(".")] + "." + selected_format,
+                            format=selected_format,
                             quality=int(quality),
+                            subsampling=0,
                         )
                     image.close()
                     image = None
