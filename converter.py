@@ -108,7 +108,7 @@ class AppLogic:
                         os.path.join(
                             dst_path,
                             os.path.basename(src_path),
-                            str(file).split(src_path)[1],
+                            str(file).split(src_path + "\\")[1],
                         ),
                     )
 
