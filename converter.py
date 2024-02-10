@@ -3,7 +3,7 @@ import logging
 import coloredlogs
 
 from pathlib import Path
-from shutil import copytree, ignore_patterns, copyfile
+from shutil import copytree, ignore_patterns, copy2
 from PIL import Image, UnidentifiedImageError
 
 # logger setup
@@ -105,7 +105,7 @@ class AppLogic:
                 num_of_image_files, num_of_non_image_files
             ):
                 for file in non_image_files:
-                    copyfile(
+                    copy2(
                         file,
                         os.path.join(
                             dst_path,
