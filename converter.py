@@ -19,7 +19,7 @@ class AppLogic:
     def create_folder_tree(self, src_path, dst_path):
         # copies the directory tree to the destination.
         def ignore_files(folder, files):
-            return [f for f in files if not os.path.isdir(os.path.join(folder, f))]
+            return [file for file in files if not os.path.isdir(os.path.join(folder, file))]
 
         try:
             copytree(

@@ -20,6 +20,7 @@ class Gui:
         screen_height = self.root.winfo_screenheight()
         window_size = f"{int(screen_width * 0.32)}x{int(screen_height * 0.2)}"
         self.root.geometry(window_size)
+        self.font = ("SegoeUI", 13)
 
         self.header = None
         self.box1_text = None
@@ -108,35 +109,38 @@ class Gui:
         path_field[field_num].insert(0, path)
 
     def build_window(self):
-        self.header = ctk.CTkLabel(self.root, text="Enter path:")
-        self.box1_text = ctk.CTkLabel(self.root, text="Source folder:")
-        self.box2_text = ctk.CTkLabel(self.root, text="Destination folder:")
+        self.header = ctk.CTkLabel(self.root, text="Enter paths:", font=self.font)
+        self.box1_text = ctk.CTkLabel(self.root, text="Source folder:", font=self.font)
+        self.box2_text = ctk.CTkLabel(self.root, text="Destination folder:", font=self.font)
         self.start_button = ctk.CTkButton(
             self.root,
             text="Start",
+            font=self.font,
             fg_color=("light_green", "green"),
             hover_color=("light_red", "red"),
             command=lambda: converter.AppLogic.convert(self, self.format_dropdown.get()),
         )
-        self.box3_text = ctk.CTkLabel(self.root, text="Quality:")
+        self.box3_text = ctk.CTkLabel(self.root, text="Quality:", font=self.font)
         self.quality_dropdown = ctk.CTkComboBox(
             self.root,
             state="readonly",
             width=100,
             values=["Lossless", *[str(i) for i in range(95, -1, -1)]],
+            font=self.font
         )
         self.quality_dropdown.set("Lossless")
         
-        self.box4_text = ctk.CTkLabel(self.root, text="Format:")
+        self.box4_text = ctk.CTkLabel(self.root, text="Format:", font=self.font)
         self.format_dropdown = ctk.CTkComboBox(
             self.root,
             state="readonly",
             width=100,
             values=["webp", "png"], #jpeg does not support transparency, so we do not support it.
+            font=self.font
         )
         self.format_dropdown.set("webp")
 
-        self.progressbar_text = ctk.CTkLabel(self.root, textvariable=self.progress)
+        self.progressbar_text = ctk.CTkLabel(self.root, textvariable=self.progress, font=self.font)
 
         self.progressbar = ctk.CTkProgressBar(
             self.root,
