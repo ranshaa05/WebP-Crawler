@@ -31,12 +31,12 @@ class AppLogic:
         except FileExistsError:
             return False
 
-    def convert(self, selected_format):
-        src_path = self.fields[0].get().strip()
-        dst_path = self.fields[1].get().strip()
-        quality = self.quality_dropdown.get()
-        if self.check_params(src_path, dst_path):
-            AppLogic().create_folder_tree(src_path, dst_path)
+    def convert(self, gui, selected_format):
+        src_path = gui.fields[0].get().strip()
+        dst_path = gui.fields[1].get().strip()
+        quality = gui.quality_dropdown.get()
+        if gui.check_params(src_path, dst_path):
+            self.create_folder_tree(src_path, dst_path)
             pass
 
             file_list = list(Path(src_path).rglob("*.*"))
@@ -66,10 +66,10 @@ class AppLogic:
                     non_image_files.append(file)
 
                 if image:
-                    if not self.show_overwrite_dialogues(new_dst_path, are_you_sure, selected_format):
+                    if not gui.show_overwrite_dialogues(new_dst_path, are_you_sure, selected_format):
                         num_of_skipped_files += 1
                         image.close()
-                        self.update_progressbar(
+                        gui.update_progressbar(
                             num_of_image_files,
                             num_of_non_image_files,
                             num_of_skipped_files,
@@ -94,14 +94,14 @@ class AppLogic:
                     image.close()
                     image = None
 
-                self.update_progressbar(
+                gui.update_progressbar(
                     num_of_image_files,
                     num_of_non_image_files,
                     num_of_skipped_files,
                     file_list_length,
                 )
 
-            if self.post_conversion_dialogue(
+            if gui.post_conversion_dialogue(
                 num_of_image_files, num_of_non_image_files
             ):
                 for file in non_image_files:
@@ -115,10 +115,10 @@ class AppLogic:
                     )
 
             # Reset progress bar
-            self.progress.set("0%")
-            self.display_progress.set("0")
+            gui.progress.set("0%")
+            gui.display_progress.set("0")
 
-            self.overwrite_all = False  # reset overwrite all flag
+            gui.overwrite_all = False  # reset overwrite all flag
 
         else:
             log.warn("Invalid parameters. No changes have been made.")

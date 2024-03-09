@@ -5,7 +5,7 @@ from CTkMessagebox import CTkMessagebox
 from tkinter import IntVar, StringVar
 
 
-import converter
+from converter import AppLogic
 
 
 class Gui:
@@ -19,7 +19,8 @@ class Gui:
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
         window_size = f"{int(screen_width * 0.32)}x{int(screen_height * 0.2)}"
-        self.root.geometry(window_size)
+        min_window_size = "620x220"
+        self.root.geometry(window_size if window_size > min_window_size else min_window_size)
         self.font = ("SegoeUI", 13)
 
         self.header = None
@@ -118,7 +119,7 @@ class Gui:
             font=self.font,
             fg_color=("light_green", "green"),
             hover_color=("light_red", "red"),
-            command=lambda: converter.AppLogic.convert(self, self.format_dropdown.get()),
+            command=lambda: AppLogic().convert(self, self.format_dropdown.get())
         )
         self.box3_text = ctk.CTkLabel(self.root, text="Quality:", font=self.font)
         self.quality_dropdown = ctk.CTkComboBox(
