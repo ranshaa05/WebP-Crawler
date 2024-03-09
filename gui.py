@@ -45,6 +45,7 @@ class Gui:
         self.show_overwrite_all_dialogue = True
 
     def check_params(self, src_path, dst_path):
+        """checks that the source and destination paths are valid and returns them if they are."""
         if src_path == "":
             CTkMessagebox(
                 title="Error",
@@ -103,12 +104,14 @@ class Gui:
             return src_path, dst_path
 
     def browse(self, path_field, field_num):
+        """opens a file dialog and inserts the selected path into the corresponding entry field."""
         path = ctk.filedialog.askdirectory(
             mustexist=True, title="Select Destination Folder")
         path_field[field_num].delete(0, ctk.END)
         path_field[field_num].insert(0, path)
 
     def build_window(self):
+        """builds the window and its widgets."""
         self.header = ctk.CTkLabel(self.root, text="Enter paths:", font=self.font)
         self.box1_text = ctk.CTkLabel(self.root, text="Source folder:", font=self.font)
         self.box2_text = ctk.CTkLabel(self.root, text="Destination folder:", font=self.font)
@@ -179,6 +182,7 @@ class Gui:
         num_of_skipped_files,
         file_list_length,
     ):
+        """updates the progress bar and its text."""
         num_of_processed_files = (
             num_of_image_files + num_of_non_image_files + num_of_skipped_files
         )
@@ -186,6 +190,7 @@ class Gui:
         self.display_progress.set(str(self.progress.get()).strip("%"))
 
     def post_conversion_dialogue(self, num_of_images, num_of_non_images):
+        """displays the corresponding dialogue after the conversion process is complete."""
         if num_of_images == 0:
             CTkMessagebox(
                 title="Error",

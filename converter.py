@@ -13,7 +13,7 @@ coloredlogs.install(level="DEBUG", logger=log)
 
 class AppLogic:
     def create_folder_tree(self, src_path, dst_path):
-        # copies the directory tree to the destination.
+        """Create a folder tree in the destination path that mirrors the source path."""
         def ignore_files(folder, files):
             return [file for file in files if not os.path.isdir(os.path.join(folder, file))]
 
@@ -28,6 +28,7 @@ class AppLogic:
             return False
 
     def convert(self, gui, selected_format):
+        """Convert images in the source path to the selected format and save them in the destination path."""
         src_path = gui.fields[0].get().strip()
         dst_path = gui.fields[1].get().strip()
         quality = gui.quality_dropdown.get()
