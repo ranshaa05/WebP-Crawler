@@ -45,7 +45,7 @@ class Gui:
         self.show_overwrite_all_dialogue = True
 
     def check_params(self, src_path, dst_path):
-        if src_path == "" or dst_path == "\\":  # check if paths are usable
+        if src_path == "":
             CTkMessagebox(
                 title="Error",
                 message="You must enter a source and destination path.",
@@ -104,8 +104,7 @@ class Gui:
 
     def browse(self, path_field, field_num):
         path = ctk.filedialog.askdirectory(
-            mustexist=True, title="Select Destination Folder"
-        ).replace("/", "\\")
+            mustexist=True, title="Select Destination Folder")
         path_field[field_num].delete(0, ctk.END)
         path_field[field_num].insert(0, path)
 

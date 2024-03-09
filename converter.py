@@ -12,10 +12,6 @@ coloredlogs.install(level="DEBUG", logger=log)
 
 
 class AppLogic:
-    def __init__(self):
-        self.last_iter_length = 0
-        self.non_image_files = []
-
     def create_folder_tree(self, src_path, dst_path):
         # copies the directory tree to the destination.
         def ignore_files(folder, files):
@@ -37,19 +33,19 @@ class AppLogic:
         quality = gui.quality_dropdown.get()
         if gui.check_params(src_path, dst_path):
             self.create_folder_tree(src_path, dst_path)
-            pass
 
             file_list = list(Path(src_path).rglob("*.*"))
             file_list_length = len(file_list)
-            last_iter_length = 0  # TODO: make these class variables
+            last_iter_length = 0
             num_of_image_files = 0
             num_of_non_image_files = 0
             num_of_skipped_files = 0
             non_image_files = []
             are_you_sure = False
+
             for file in file_list:
                 image = None
-                new_dst_path = f"{dst_path}\\{os.path.basename(src_path) + str(file).split(src_path)[1]}"  # destination to original tree path
+                new_dst_path = os.path.join(dst_path, os.path.basename(src_path), os.path.relpath(file, src_path))  # destination to original tree path
 
                 print(
                     f"Converting {os.path.basename(new_dst_path)}...",
@@ -110,10 +106,9 @@ class AppLogic:
                         os.path.join(
                             dst_path,
                             os.path.basename(src_path),
-                            str(file).split(src_path + "\\")[1],
+                            os.path.relpath(file, src_path),
                         ),
                     )
-
             # Reset progress bar
             gui.progress.set("0%")
             gui.display_progress.set("0")
