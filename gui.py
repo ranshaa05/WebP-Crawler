@@ -46,62 +46,47 @@ class Gui:
 
     def check_params(self, src_path, dst_path):
         """checks that the source and destination paths are valid and returns them if they are."""
-        if src_path == "":
-            CTkMessagebox(
-                title="Error",
-                message="You must enter a source and destination path.",
-                icon="cancel",
-                sound=True,
-            )
-        elif src_path == dst_path:
-            CTkMessagebox(
-                title="Error",
-                message="Source and destination folders cannot be the same.",
-                icon="cancel",
-                sound=True,
-            )
-        elif not os.path.exists(src_path):
-            CTkMessagebox(
-                title="Error",
-                message="Source folder does not exist.\nPlease select a different folder.",
-                icon="cancel",
-                sound=True,
-            )
-        elif not os.path.exists(dst_path):
-            create_destination_folder = CTkMessagebox(
-                title="Destination folder does not exist",
-                message="Destination folder does not exist.\nWould you like to create it?",
-                icon="question",
-                option_1="Yes",
-                option_2="No",
-            )
-            if create_destination_folder.get() == "Yes":
-                os.mkdir(dst_path)
-                return True
-            else:
-                return False
+        error_messages = {
+            "empty": ("Error", "You must enter both source and destination paths."),
+            "same_path": ("Error", "Source and destination folders cannot be the same."),
+            "not_exist": ("Error", "The source path does not exist."),
+            "different_folder": ("Select a different folder.", "Please select a different destination folder."),
+            "rel_path": ("Error", "Destination folder must be full path."),
+        }
 
-        elif os.path.isdir(os.path.join(dst_path, os.path.basename(src_path))):
+        src_basename = os.path.basename(src_path)
+
+        if src_path == "" or dst_path == "":
+            title, message = error_messages["empty"]
+        elif src_path == dst_path:
+            title, message = error_messages["same_path"]
+        elif not os.path.exists(src_path):
+            title, message = error_messages["not_exist"]
+        elif not os.path.isabs(dst_path):
+            title, message = error_messages["rel_path"]
+
+        elif os.path.isdir(os.path.join(dst_path, src_basename)):
             use_folder = CTkMessagebox(
                 title="Destination folder already exists",
-                message=f"Destination folder already has a folder named {os.path.basename(src_path)} in it.\nWould you like to use it anyway?",
+                message=f"Destination folder already has a folder named {src_basename} in it.\nWould you like to use it anyway?",
                 icon="question",
                 option_1="Yes",
                 option_2="No",
             )
             if use_folder.get() == "Yes":
-                return src_path, dst_path
-
+                return True
             else:
-                CTkMessagebox(
-                    title="Select a different  folder.",
-                    message="Please select a different destination folder.",
-                    icon="warning",
-                )
-                return False
-
+                title, message = error_messages["different_folder"]
         else:
-            return src_path, dst_path
+            return True
+
+        CTkMessagebox(
+            title=title,
+            message=message,
+            icon="cancel",
+            sound=True,
+        )
+        return False
 
     def browse(self, path_field, field_num):
         """opens a file dialog and inserts the selected path into the corresponding entry field."""
