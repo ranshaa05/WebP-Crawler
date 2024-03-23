@@ -97,7 +97,7 @@ class Gui:
     def browse(self, path_field, field_num):
         """opens a file dialog and inserts the selected path into the corresponding entry field."""
         path = ctk.filedialog.askdirectory(
-            mustexist=True, title="Select Destination Folder")
+            mustexist=True, title=f"Select {"Source" if field_num == 0 else "Destination"} Folder")
         path_field[field_num].delete(0, ctk.END)
         path_field[field_num].insert(0, path)
 
