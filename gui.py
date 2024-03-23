@@ -21,6 +21,7 @@ class Gui:
         window_size = f"{int(screen_width * 0.32)}x{int(screen_height * 0.2)}"
         min_window_size = "620x220"
         self.root.geometry(window_size if window_size > min_window_size else min_window_size)
+        self.root.resizable(False, False)
         self.font = ("SegoeUI", 13)
 
         self.header = None
@@ -146,9 +147,9 @@ class Gui:
         self.box1_text.grid(row=3, column=1, sticky="w", padx=(10, 0))
         self.box2_text.grid(row=4, column=1, sticky="w", padx=(10, 0))
         self.box3_text.grid(row=5, column=1, sticky="w", padx=(10, 0), pady=(5, 0))
-        self.quality_dropdown.grid(row=5, column=1, sticky="w", padx=(60, 0), pady=(5, 0))
-        self.box4_text.grid(row=5, column=3, sticky="w", padx=(0, 0), pady=(5, 0))
-        self.format_dropdown.grid(row=5, column=3, sticky="w", padx=(45, 0), pady=(5, 0))
+        self.quality_dropdown.grid(row=5, column=1, sticky="w", padx=(60, 0), pady=(10, 0))
+        self.box4_text.grid(row=5, column=3, sticky="w", pady=(5, 0))
+        self.format_dropdown.grid(row=5, column=3, sticky="w", padx=(45, 0), pady=(10, 0))
         self.start_button.grid(row=6, column=2)
         self.progressbar_text.grid(row=7, column=2)
         self.progressbar.grid(row=8, column=2)
