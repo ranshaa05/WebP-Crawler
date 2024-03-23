@@ -1,9 +1,9 @@
 import customtkinter as ctk
 import os
+import threading
 
 from CTkMessagebox import CTkMessagebox
 from tkinter import IntVar, StringVar
-
 
 from converter import AppLogic
 
@@ -43,6 +43,8 @@ class Gui:
 
         self.overwrite_all = False
         self.show_overwrite_all_dialogue = True
+        
+        self.build_window()
 
     def check_params(self, src_path, dst_path):
         """checks that the source and destination paths are valid and returns them if they are."""
@@ -106,7 +108,7 @@ class Gui:
             font=self.font,
             fg_color=("light_green", "green"),
             hover_color=("light_red", "red"),
-            command=lambda: AppLogic().convert(self, self.format_dropdown.get())
+            command=self.start_conversion_thread
         )
         self.box3_text = ctk.CTkLabel(self.root, text="Quality:", font=self.font)
         self.quality_dropdown = ctk.CTkComboBox(
@@ -159,6 +161,12 @@ class Gui:
             )
             browse_button.grid(row=i + 3, column=3, padx=(5, 0), pady=(5, 0))
             self.fields.append(path_field)
+
+    def start_conversion_thread(self):
+        self.start_button.configure(state="disabled")
+        conversion_thread = threading.Thread(target=lambda: AppLogic().convert(self, self.format_dropdown.get()), daemon=True)
+        conversion_thread.start()
+
 
     def update_progressbar(
         self,
@@ -250,7 +258,7 @@ Copy non-images to destination folder?""",
             return False
 
     def show_overwrite_dialogues(self, new_dst_path, are_you_sure, selected_format):
-        # check if file already exists and prompt user to overwrite or skip
+        """check if file already exists and prompt user to overwrite or skip."""
         if os.path.isfile(new_dst_path.split(".")[0] + "." + selected_format):
             if self.overwrite_all:
                 return True
@@ -281,5 +289,4 @@ Copy non-images to destination folder?""",
 
 if __name__ == "__main__":
     gui = Gui()
-    gui.build_window()
     gui.root.mainloop()

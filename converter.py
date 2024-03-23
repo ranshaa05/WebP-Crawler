@@ -118,3 +118,5 @@ class AppLogic:
 
         else:
             log.warn("Invalid parameters. No changes have been made.")
+        
+        gui.start_button.configure(state="normal")
