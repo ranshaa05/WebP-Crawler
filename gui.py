@@ -103,7 +103,7 @@ class Gui:
 
     def build_window(self):
         """builds the window and its widgets."""
-        self.header = ctk.CTkLabel(self.root, text="Enter paths:", font=self.font)
+        self.header = ctk.CTkLabel(self.root, text="─── WebP Crawler ───", font=("Helvetica", 20, "bold"))
         self.box1_text = ctk.CTkLabel(self.root, text="Source folder:", font=self.font)
         self.box2_text = ctk.CTkLabel(self.root, text="Destination folder:", font=self.font)
         self.start_button = ctk.CTkButton(
@@ -143,7 +143,7 @@ class Gui:
             mode="determinate",
         )
 
-        self.header.grid(row=0, column=2, columnspan=1)
+        self.header.grid(row=0, column=2, pady=(10, 0))
         self.box1_text.grid(row=3, column=1, sticky="w", padx=(10, 0))
         self.box2_text.grid(row=4, column=1, sticky="w", padx=(10, 0))
         self.box3_text.grid(row=5, column=1, sticky="w", padx=(10, 0), pady=(5, 0))
