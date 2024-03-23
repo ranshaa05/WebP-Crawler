@@ -112,7 +112,7 @@ class AppLogic:
                     )
             # Reset progress bar
             gui.progress.set("0%")
-            gui.display_progress.set("0")
+            gui.progressbar_percentage.set("0")
 
             gui.overwrite_all = False  # reset overwrite all flag
 

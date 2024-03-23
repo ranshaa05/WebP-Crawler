@@ -3,7 +3,7 @@ import os
 import threading
 
 from CTkMessagebox import CTkMessagebox
-from tkinter import IntVar, StringVar
+from tkinter import DoubleVar, StringVar
 
 from converter import AppLogic
 
@@ -37,9 +37,7 @@ class Gui:
 
         self.progress = StringVar()
         self.progress.set("0%")
-        self.display_progress = (
-            IntVar()
-        )  # hacky way to include the "%" sign in the progressbar text
+        self.progressbar_percentage = DoubleVar()  # hacky way to include the "%" sign in the progressbar text
 
         self.overwrite_all = False
         self.show_overwrite_all_dialogue = True
@@ -134,7 +132,7 @@ class Gui:
 
         self.progressbar = ctk.CTkProgressBar(
             self.root,
-            variable=self.display_progress,
+            variable=self.progressbar_percentage,
             width=300,
             mode="determinate",
         )
@@ -176,11 +174,11 @@ class Gui:
         file_list_length,
     ):
         """updates the progress bar and its text."""
-        num_of_processed_files = (
-            num_of_image_files + num_of_non_image_files + num_of_skipped_files
-        )
-        self.progress.set(f"{int((num_of_processed_files / file_list_length) * 100)}%")
-        self.display_progress.set(str(self.progress.get()).strip("%"))
+        num_of_processed_files = num_of_image_files + num_of_non_image_files + num_of_skipped_files
+        progress_percentage = num_of_processed_files / file_list_length * 100
+        self.progress.set(f"{int(progress_percentage)}%")
+        self.progressbar_percentage.set(progress_percentage / 100)
+        
 
     def post_conversion_dialogue(self, num_of_images, num_of_non_images):
         """displays the corresponding dialogue after the conversion process is complete."""
@@ -267,7 +265,7 @@ Copy non-images to destination folder?""",
                 overwrite_file = self.confirm_overwrite_file(
                     os.path.basename(
                         new_dst_path.split(".")[0]
-                    ),  # TODO: this somehow refreshes the window and advances the progress intvar?
+                    ),
                     selected_format
                 )
 
