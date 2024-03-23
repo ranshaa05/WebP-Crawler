@@ -15,7 +15,7 @@ class Gui:
         else:
             self.root = root
 
-        self.root.title("All To webp")
+        self.root.title("WebP Crawler")
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
         window_size = f"{int(screen_width * 0.32)}x{int(screen_height * 0.2)}"
@@ -148,7 +148,7 @@ class Gui:
         self.box2_text.grid(row=4, column=1, sticky="w", padx=(10, 0))
         self.box3_text.grid(row=5, column=1, sticky="w", padx=(10, 0), pady=(5, 0))
         self.quality_dropdown.grid(row=5, column=1, sticky="w", padx=(60, 0), pady=(10, 0))
-        self.box4_text.grid(row=5, column=3, sticky="w", pady=(5, 0))
+        self.box4_text.grid(row=5, column=3, sticky="w", pady=(10, 0))
         self.format_dropdown.grid(row=5, column=3, sticky="w", padx=(45, 0), pady=(10, 0))
         self.start_button.grid(row=6, column=2)
         self.progressbar_text.grid(row=7, column=2)
