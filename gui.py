@@ -52,6 +52,7 @@ class Gui:
             "not_exist": ("Error", "The source path does not exist."),
             "different_folder": ("Select a different folder.", "Please select a different destination folder."),
             "rel_path": ("Error", "Destination folder must be full path."),
+            "dst_in_src": ("Error", "Destination folder cannot be inside source folder."),
         }
 
         src_basename = os.path.basename(src_path)
@@ -77,6 +78,10 @@ class Gui:
                 return True
             else:
                 title, message = error_messages["different_folder"]
+
+        elif src_path in dst_path:
+            title, message = error_messages["dst_in_src"]
+
         else:
             return True
 
