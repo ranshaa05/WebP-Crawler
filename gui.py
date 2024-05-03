@@ -146,12 +146,12 @@ class Gui:
             state="readonly",
             width=100,
             values=[
-                "webp",
-                "png",
+                "WebP",
+                "PNG",
             ],  # jpeg does not support transparency, so we do not support it.
             font=self.font,
         )
-        self.format_dropdown.set("webp")
+        self.format_dropdown.set("WebP")
 
         self.progressbar_text = ctk.CTkLabel(
             self.root, textvariable=self.progress, font=self.font
@@ -195,7 +195,7 @@ class Gui:
         """starts the conversion process in a separate thread to prevent the GUI from freezing."""
         self.start_button.configure(state="disabled")
         conversion_thread = threading.Thread(
-            target=lambda: AppLogic().convert(self, self.format_dropdown.get()),
+            target=lambda: AppLogic().convert(self, self.format_dropdown.get().lower()),
             daemon=True,
         )
         conversion_thread.start()
