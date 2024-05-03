@@ -1,7 +1,7 @@
-import customtkinter as ctk
-import os
+from pathlib import Path
 import threading
 
+import customtkinter as ctk
 from CTkMessagebox import CTkMessagebox
 from tkinter import DoubleVar, StringVar
 
@@ -20,7 +20,9 @@ class Gui:
         screen_height = self.root.winfo_screenheight()
         window_size = f"{int(screen_width * 0.32)}x{int(screen_height * 0.2)}"
         min_window_size = "620x220"
-        self.root.geometry(window_size if window_size > min_window_size else min_window_size)
+        self.root.geometry(
+            window_size if window_size > min_window_size else min_window_size
+        )
         self.root.resizable(False, False)
         self.font = ("SegoeUI", 13)
 
@@ -38,39 +40,47 @@ class Gui:
 
         self.progress = StringVar()
         self.progress.set("0%")
-        self.progressbar_percentage = DoubleVar()  # hacky way to include the "%" sign in the progressbar text
+        self.progressbar_percentage = (
+            DoubleVar()
+        )  # hacky way to include the "%" sign in the progressbar text
 
         self.overwrite_all = False
         self.show_overwrite_all_dialogue = True
-        
+
         self.build_window()
 
     def check_params(self, src_path, dst_path):
         """checks that the source and destination paths are valid and returns them if they are."""
         error_messages = {
             "empty": ("Error", "You must enter both source and destination paths."),
-            "same_path": ("Error", "Source and destination folders cannot be the same."),
+            "same_path": (
+                "Error",
+                "Source and destination folders cannot be the same.",
+            ),
             "not_exist": ("Error", "The source path does not exist."),
-            "different_folder": ("Select a different folder.", "Please select a different destination folder."),
-            "rel_path": ("Error", "Destination folder must be full path."),
-            "dst_in_src": ("Error", "Destination folder cannot be inside source folder."),
+            "different_folder": (
+                "Select a different folder.",
+                "Please select a different destination folder.",
+            ),
+            "dst_in_src": (
+                "Error",
+                "Destination folder cannot be inside source folder.",
+            ),
         }
 
-        src_basename = os.path.basename(src_path)
+        src_basename = src_path.name
 
-        if src_path == "" or dst_path == "":
+        if str(src_path) == "." or str(dst_path) == ".":
             title, message = error_messages["empty"]
+        elif not src_path.exists():
+            title, message = error_messages["not_exist"]
         elif src_path == dst_path:
             title, message = error_messages["same_path"]
-        elif not os.path.exists(src_path):
-            title, message = error_messages["not_exist"]
-        elif not os.path.isabs(dst_path):
-            title, message = error_messages["rel_path"]
 
-        elif os.path.isdir(os.path.join(dst_path, src_basename)):
+        elif (dst_path / src_basename).is_dir():
             use_folder = CTkMessagebox(
                 title="Destination folder already exists",
-                message=f"Destination folder already has a folder named {src_basename} in it.\nWould you like to use it anyway?",
+                message=f"Destination folder already has a folder named '{src_basename}' in it.\nWould you like to use it anyway?",
                 icon="question",
                 option_1="Yes",
                 option_2="No",
@@ -80,7 +90,7 @@ class Gui:
             else:
                 title, message = error_messages["different_folder"]
 
-        elif src_path in dst_path:
+        elif str(src_path) in str(dst_path):
             title, message = error_messages["dst_in_src"]
 
         else:
@@ -97,22 +107,28 @@ class Gui:
     def browse(self, path_field, field_num):
         """opens a file dialog and inserts the selected path into the corresponding entry field."""
         path = ctk.filedialog.askdirectory(
-            mustexist=True, title=f"Select {"Source" if field_num == 0 else "Destination"} Folder")
+            mustexist=True,
+            title=f"Select {"Source" if field_num == 0 else "Destination"} Folder",
+        )
         path_field[field_num].delete(0, ctk.END)
         path_field[field_num].insert(0, path)
 
     def build_window(self):
         """builds the window and its widgets."""
-        self.header = ctk.CTkLabel(self.root, text="─── WebP Crawler ───", font=("Helvetica", 20, "bold"))
+        self.header = ctk.CTkLabel(
+            self.root, text="─── WebP Crawler ───", font=("Helvetica", 20, "bold")
+        )
         self.box1_text = ctk.CTkLabel(self.root, text="Source folder:", font=self.font)
-        self.box2_text = ctk.CTkLabel(self.root, text="Destination folder:", font=self.font)
+        self.box2_text = ctk.CTkLabel(
+            self.root, text="Destination folder:", font=self.font
+        )
         self.start_button = ctk.CTkButton(
             self.root,
             text="Start",
             font=self.font,
             fg_color=("light_green", "green"),
             hover_color=("light_red", "red"),
-            command=self.start_conversion_thread
+            command=self.start_conversion_thread,
         )
         self.box3_text = ctk.CTkLabel(self.root, text="Quality:", font=self.font)
         self.quality_dropdown = ctk.CTkComboBox(
@@ -120,21 +136,26 @@ class Gui:
             state="readonly",
             width=100,
             values=["Lossless", *[str(i) for i in range(95, -1, -1)]],
-            font=self.font
+            font=self.font,
         )
         self.quality_dropdown.set("Lossless")
-        
+
         self.box4_text = ctk.CTkLabel(self.root, text="Format:", font=self.font)
         self.format_dropdown = ctk.CTkComboBox(
             self.root,
             state="readonly",
             width=100,
-            values=["webp", "png"], #jpeg does not support transparency, so we do not support it.
-            font=self.font
+            values=[
+                "webp",
+                "png",
+            ],  # jpeg does not support transparency, so we do not support it.
+            font=self.font,
         )
         self.format_dropdown.set("webp")
 
-        self.progressbar_text = ctk.CTkLabel(self.root, textvariable=self.progress, font=self.font)
+        self.progressbar_text = ctk.CTkLabel(
+            self.root, textvariable=self.progress, font=self.font
+        )
 
         self.progressbar = ctk.CTkProgressBar(
             self.root,
@@ -147,9 +168,13 @@ class Gui:
         self.box1_text.grid(row=3, column=1, sticky="w", padx=(10, 0))
         self.box2_text.grid(row=4, column=1, sticky="w", padx=(10, 0))
         self.box3_text.grid(row=5, column=1, sticky="w", padx=(10, 0), pady=(5, 0))
-        self.quality_dropdown.grid(row=5, column=1, sticky="w", padx=(60, 0), pady=(10, 0))
+        self.quality_dropdown.grid(
+            row=5, column=1, sticky="w", padx=(60, 0), pady=(10, 0)
+        )
         self.box4_text.grid(row=5, column=3, sticky="w", pady=(10, 0))
-        self.format_dropdown.grid(row=5, column=3, sticky="w", padx=(45, 0), pady=(10, 0))
+        self.format_dropdown.grid(
+            row=5, column=3, sticky="w", padx=(45, 0), pady=(10, 0)
+        )
         self.start_button.grid(row=6, column=2)
         self.progressbar_text.grid(row=7, column=2)
         self.progressbar.grid(row=8, column=2)
@@ -167,10 +192,13 @@ class Gui:
             self.fields.append(path_field)
 
     def start_conversion_thread(self):
+        """starts the conversion process in a separate thread to prevent the GUI from freezing."""
         self.start_button.configure(state="disabled")
-        conversion_thread = threading.Thread(target=lambda: AppLogic().convert(self, self.format_dropdown.get()), daemon=True)
+        conversion_thread = threading.Thread(
+            target=lambda: AppLogic().convert(self, self.format_dropdown.get()),
+            daemon=True,
+        )
         conversion_thread.start()
-
 
     def update_progressbar(
         self,
@@ -180,11 +208,12 @@ class Gui:
         file_list_length,
     ):
         """updates the progress bar and its text."""
-        num_of_processed_files = num_of_image_files + num_of_non_image_files + num_of_skipped_files
+        num_of_processed_files = (
+            num_of_image_files + num_of_non_image_files + num_of_skipped_files
+        )
         progress_percentage = num_of_processed_files / file_list_length * 100
         self.progress.set(f"{int(progress_percentage)}%")
         self.progressbar_percentage.set(progress_percentage / 100)
-        
 
     def post_conversion_dialogue(self, num_of_images, num_of_non_images):
         """displays the corresponding dialogue after the conversion process is complete."""
@@ -263,16 +292,13 @@ Copy non-images to destination folder?""",
 
     def show_overwrite_dialogues(self, new_dst_path, are_you_sure, selected_format):
         """check if file already exists and prompt user to overwrite or skip."""
-        if os.path.isfile(new_dst_path.split(".")[0] + "." + selected_format):
+        new_dst_path = Path(new_dst_path)
+        if (new_dst_path.with_suffix("." + selected_format)).is_file():
             if self.overwrite_all:
                 return True
-
             else:
                 overwrite_file = self.confirm_overwrite_file(
-                    os.path.basename(
-                        new_dst_path.split(".")[0]
-                    ),
-                    selected_format
+                    new_dst_path.stem, selected_format
                 )
 
                 if not overwrite_file:
