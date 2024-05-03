@@ -1,6 +1,6 @@
 # WebP Crawler
 
-WebP Crawler is a Python-based GUI application designed to convert all images within a specified directory and its subdirectories to WebP (or PNG) format while maintaining the original folder structure.
+WebP Crawler is a Python-based GUI application designed to convert all images within a specified directory _**and its subdirectories**_ to WebP (or PNG) format while maintaining the original folder structure.
 
 ## Features
 
