@@ -3,7 +3,7 @@ import threading
 
 import customtkinter as ctk
 from CTkMessagebox import CTkMessagebox
-from tkinter import DoubleVar, StringVar
+from tkinter import DoubleVar, StringVar, BooleanVar
 
 from converter import AppLogic
 
@@ -35,6 +35,9 @@ class Gui:
         self.quality_dropdown = None
         self.format_dropdown = None
         self.fields = None
+        self.include_subfolders = BooleanVar(value=True)
+        self.include_subfolders_checkbox = ctk.CTkCheckBox(root, text="Include subfolders", variable=self.include_subfolders, onvalue=True, offvalue=False, font=self.font)
+
         self.progressbar = None
         self.progressbar_text = None
 
@@ -171,7 +174,10 @@ class Gui:
         self.quality_dropdown.grid(
             row=5, column=1, sticky="w", padx=(60, 0), pady=(10, 0)
         )
-        self.box4_text.grid(row=5, column=3, sticky="w", pady=(10, 0))
+
+        self.include_subfolders_checkbox.grid(row=5, column=2, pady=(10, 0))
+
+        self.box4_text.grid(row=5, column=3, sticky="w", pady=(15, 0))
         self.format_dropdown.grid(
             row=5, column=3, sticky="w", padx=(45, 0), pady=(10, 0)
         )

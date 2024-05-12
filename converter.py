@@ -21,12 +21,12 @@ class AppLogic:
         try:
             copytree(
                 src_path,
-                dst_path / src_path.name,
+                dst_path,
                 symlinks=False,
                 ignore=ignore_files,
             )
         except FileExistsError:
-            return False
+            return
 
     def convert(self, gui, selected_format):
         """Convert images in the source path to the selected format and save them in the destination path."""
@@ -34,8 +34,15 @@ class AppLogic:
         dst_path = Path(gui.fields[1].get().strip())
         quality = gui.quality_dropdown.get()
         if gui.check_params(src_path, dst_path):
-            self.create_folder_tree(src_path, dst_path)
-            file_list = list(src_path.rglob("*.*"))
+            dst_path = dst_path / src_path.name
+            if gui.include_subfolders.get():
+                self.create_folder_tree(src_path, dst_path)
+                file_list = list(src_path.rglob("*.*"))
+            else:
+                dst_path.mkdir(parents=True, exist_ok=True)
+                file_list = list(src_path.iterdir())
+                file_list = [item for item in file_list if item.is_file()]
+            
             file_list_length = len(file_list)
             last_iter_length = 0
             num_of_image_files = 0
@@ -45,16 +52,16 @@ class AppLogic:
             are_you_sure = False
             for file in file_list:
                 image = None
-                new_dst_path = (
-                    dst_path / src_path.name / file.relative_to(src_path)
+                full_dst_path = (
+                    dst_path / file.relative_to(src_path)
                 )  # destination to original tree path
-                if new_dst_path.is_dir():
+                if full_dst_path.is_dir(): #only applicable when include subfolders is checked
                     continue
                 print(
-                    f"Converting {new_dst_path.name}...",
-                    end=" " * (last_iter_length - len(new_dst_path.name)) + "\r",
+                    f"Converting {full_dst_path.name}...",
+                    end=" " * (last_iter_length - len(full_dst_path.name)) + "\r",
                 )
-                last_iter_length = len(new_dst_path.name)
+                last_iter_length = len(full_dst_path.name)
                 try:
                     image = Image.open(file)
                     num_of_image_files += 1
@@ -63,7 +70,7 @@ class AppLogic:
                     non_image_files.append(file)
                 if image:
                     if not gui.show_overwrite_dialogues(
-                        new_dst_path, are_you_sure, selected_format
+                        full_dst_path, are_you_sure, selected_format
                     ):
                         num_of_skipped_files += 1
                         image.close()
@@ -76,14 +83,14 @@ class AppLogic:
                         continue  # continue if user chooses to skip overwriting this file.
                     if quality == "Lossless":
                         image.save(
-                            str(new_dst_path.with_suffix("." + selected_format)),
+                            str(full_dst_path.with_suffix("." + selected_format)),
                             format=selected_format,
                             lossless=True,
                             subsampling=0,
                         )
                     else:
                         image.save(
-                            str(new_dst_path.with_suffix("." + selected_format)),
+                            str(full_dst_path.with_suffix("." + selected_format)),
                             format=selected_format,
                             quality=int(quality),
                         )
@@ -99,7 +106,7 @@ class AppLogic:
                 for file in non_image_files:
                     copy2(
                         file,
-                        dst_path / src_path.name / file.relative_to(src_path),
+                        dst_path / file.relative_to(src_path),
                     )
             # Reset progress bar
             gui.progress.set("0%")
