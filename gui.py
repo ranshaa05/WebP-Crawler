@@ -15,31 +15,20 @@ class Gui:
         else:
             self.root = root
 
+        # self.root.iconbitmap('icon.ico')
         self.root.title("WebP Crawler")
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
-        window_size = f"{int(screen_width * 0.32)}x{int(screen_height * 0.2)}"
-        min_window_size = "620x220"
+        window_size = f"{int(screen_width * 0.32)}x{int(screen_height * 0.21)}"
+        min_window_size = "614x226"
         self.root.geometry(
-            window_size if window_size > min_window_size else min_window_size
+            window_size if window_size >= min_window_size else min_window_size
         )
         self.root.resizable(False, False)
         self.font = ("SegoeUI", 13)
 
-        self.header = None
-        self.box1_text = None
-        self.box2_text = None
-        self.box3_text = None
-        self.box4_text = None
-        self.start_button = None
-        self.quality_dropdown = None
-        self.format_dropdown = None
-        self.fields = None
         self.include_subfolders = BooleanVar(value=True)
         self.include_subfolders_checkbox = ctk.CTkCheckBox(root, text="Include subfolders", variable=self.include_subfolders, onvalue=True, offvalue=False, font=self.font)
-
-        self.progressbar = None
-        self.progressbar_text = None
 
         self.progress = StringVar()
         self.progress.set("0%")
@@ -199,7 +188,7 @@ class Gui:
 
     def start_conversion_thread(self):
         """starts the conversion process in a separate thread to prevent the GUI from freezing."""
-        self.start_button.configure(state="disabled")
+        self.start_button.configure(state="disabled", text="Converting...")
         conversion_thread = threading.Thread(
             target=lambda: AppLogic().convert(self, self.format_dropdown.get().lower()),
             daemon=True,
@@ -209,21 +198,21 @@ class Gui:
     def update_progressbar(
         self,
         num_of_image_files,
-        num_of_non_image_files,
+        num_of_failed_conversions,
         num_of_skipped_files,
         file_list_length,
     ):
         """updates the progress bar and its text."""
         num_of_processed_files = (
-            num_of_image_files + num_of_non_image_files + num_of_skipped_files
+            num_of_image_files + num_of_failed_conversions + num_of_skipped_files
         )
         progress_percentage = num_of_processed_files / file_list_length * 100
         self.progress.set(f"{int(progress_percentage)}%")
         self.progressbar_percentage.set(progress_percentage / 100)
 
-    def post_conversion_dialogue(self, num_of_images, num_of_non_images):
+    def post_conversion_dialogue(self, num_of_converted_files, num_of_failed_conversions):
         """displays the corresponding dialogue after the conversion process is complete."""
-        if num_of_images == 0:
+        if num_of_converted_files == 0:
             CTkMessagebox(
                 title="Error",
                 message="No images were found in source folder.",
@@ -231,12 +220,12 @@ class Gui:
                 sound=True,
             )
             return False
-        elif num_of_non_images > 0:
+        elif num_of_failed_conversions > 0:
             copy_non_images = CTkMessagebox(
                 title="Copy non-images?",
-                message=f"""{num_of_images} files were successfully converted.
-{num_of_non_images} files could not be converted. they are most likely not images.
-Copy non-images to destination folder?""",
+                message=f"""{num_of_converted_files} files were successfully converted.
+Found {num_of_failed_conversions} files that are not images.
+Would you like to copy them to the destination folder(s)?""",
                 icon="question",
                 option_1="Yes",
                 option_2="No",
@@ -249,7 +238,7 @@ Copy non-images to destination folder?""",
         else:
             CTkMessagebox(
                 title="Conversion complete!",
-                message=f"{num_of_images} files were successfully converted!",
+                message=f"{num_of_converted_files} files were successfully converted!",
                 icon="check",
                 option_1="Ok",
             )

@@ -9,6 +9,8 @@ import coloredlogs
 log = logging.getLogger(__name__)
 coloredlogs.install(level="DEBUG", logger=log)
 
+# Supported image formats
+REGISTERED_EXTENSIONS = set(ext.lower() for ext in Image.registered_extensions().keys())
 
 class AppLogic:
     def create_folder_tree(self, src_path: Path, dst_path: Path):
@@ -27,6 +29,25 @@ class AppLogic:
             )
         except FileExistsError:
             return
+    
+    def sort_files(self, src_path, include_subfolders):
+        image_files = []
+        non_image_files = []
+    
+        if include_subfolders:
+            files = src_path.rglob("*.*")
+        else:
+            files = src_path.glob("*.*")
+    
+        for file in files:
+            extension = file.suffix
+    
+            if extension.lower() in REGISTERED_EXTENSIONS:
+                image_files.append(file)
+            else:
+                non_image_files.append(file)
+    
+        return image_files, non_image_files
 
     def convert(self, gui, selected_format):
         """Convert images in the source path to the selected format and save them in the destination path."""
@@ -35,39 +56,34 @@ class AppLogic:
         quality = gui.quality_dropdown.get()
         if gui.check_params(src_path, dst_path):
             dst_path = dst_path / src_path.name
-            if gui.include_subfolders.get():
+            include_subfolders = gui.include_subfolders.get()
+            if include_subfolders:
                 self.create_folder_tree(src_path, dst_path)
-                file_list = list(src_path.rglob("*.*"))
             else:
                 dst_path.mkdir(parents=True, exist_ok=True)
-                file_list = list(src_path.iterdir())
-                file_list = [item for item in file_list if item.is_file()]
-            
-            file_list_length = len(file_list)
-            last_iter_length = 0
-            num_of_image_files = 0
-            num_of_non_image_files = 0
+
+            image_list, non_image_list = self.sort_files(src_path, include_subfolders)
+
+            image_list_length = len(image_list)
+            last_print_length = 0
+            num_of_converted_files = 0
+            num_of_failed_conversions = 0
             num_of_skipped_files = 0
-            non_image_files = []
             are_you_sure = False
-            for file in file_list:
+            for file in image_list:
                 image = None
-                full_dst_path = (
-                    dst_path / file.relative_to(src_path)
-                )  # destination to original tree path
-                if full_dst_path.is_dir(): #only applicable when include subfolders is checked
-                    continue
+                full_dst_path = (dst_path / file.relative_to(src_path))
                 print(
-                    f"Converting {full_dst_path.name}...",
-                    end=" " * (last_iter_length - len(full_dst_path.name)) + "\r",
+                    f"Converting {full_dst_path.name} to {selected_format}...",
+                    end=" " * (last_print_length - len(full_dst_path.name)) + "\r",
                 )
-                last_iter_length = len(full_dst_path.name)
+                last_print_length = len(f"{full_dst_path.name} to {selected_format}")
                 try:
                     image = Image.open(file)
-                    num_of_image_files += 1
+                    num_of_converted_files += 1
                 except UnidentifiedImageError:
-                    num_of_non_image_files += 1
-                    non_image_files.append(file)
+                    num_of_failed_conversions += 1
+                    non_image_list.append(file)
                 if image:
                     if not gui.show_overwrite_dialogues(
                         full_dst_path, are_you_sure, selected_format
@@ -75,35 +91,30 @@ class AppLogic:
                         num_of_skipped_files += 1
                         image.close()
                         gui.update_progressbar(
-                            num_of_image_files,
-                            num_of_non_image_files,
+                            num_of_converted_files,
+                            num_of_failed_conversions,
                             num_of_skipped_files,
-                            file_list_length,
+                            image_list_length,
                         )
                         continue  # continue if user chooses to skip overwriting this file.
-                    if quality == "Lossless":
-                        image.save(
-                            str(full_dst_path.with_suffix("." + selected_format)),
-                            format=selected_format,
-                            lossless=True,
-                            subsampling=0,
-                        )
-                    else:
-                        image.save(
-                            str(full_dst_path.with_suffix("." + selected_format)),
-                            format=selected_format,
-                            quality=int(quality),
+
+                    image.save(
+                        full_dst_path.with_suffix("." + selected_format),
+                        format=selected_format,
+                        lossless=True if quality == "Lossless" else False,
+                        quality=int(quality) if quality.isnumeric() else 100,
+                        subsampling=0
                         )
                     image.close()
                     image = None
                 gui.update_progressbar(
-                    num_of_image_files,
-                    num_of_non_image_files,
+                    num_of_converted_files,
+                    num_of_failed_conversions,
                     num_of_skipped_files,
-                    file_list_length,
+                    image_list_length,
                 )
-            if gui.post_conversion_dialogue(num_of_image_files, num_of_non_image_files):
-                for file in non_image_files:
+            if gui.post_conversion_dialogue(num_of_converted_files, len(non_image_list)):
+                for file in non_image_list: #TODO: this doesnt work for folders
                     copy2(
                         file,
                         dst_path / file.relative_to(src_path),
@@ -114,4 +125,4 @@ class AppLogic:
             gui.overwrite_all = False  # reset overwrite all flag
         else:
             log.warn("Invalid parameters. No changes have been made.")
-        gui.start_button.configure(state="normal")
+        gui.start_button.configure(state="normal", text="Start")
