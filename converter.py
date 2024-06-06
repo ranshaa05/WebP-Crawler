@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from shutil import copy2, copytree
+from shutil import copy2
 
 from PIL import Image, UnidentifiedImageError
 import coloredlogs
@@ -14,21 +14,16 @@ REGISTERED_EXTENSIONS = set(ext.lower() for ext in Image.registered_extensions()
 
 class AppLogic:
     def create_folder_tree(self, src_path: Path, dst_path: Path):
-        """Create a folder tree in the destination path that mirrors the source path."""
+        """Create a folder tree in the destination path that mirrors the source path, without copying files."""
+    
+        if not dst_path.exists():
+            dst_path.mkdir(parents=True, exist_ok=True)
+    
+        for item in src_path.rglob('*'):
+            if item.is_dir():
+                destination = dst_path / item.relative_to(src_path)
+                destination.mkdir(parents=True, exist_ok=True)
 
-        def ignore_files(folder: str, files):
-            folder_path = Path(folder)
-            return [file for file in files if not (folder_path / file).is_dir()]
-
-        try:
-            copytree(
-                src_path,
-                dst_path,
-                symlinks=False,
-                ignore=ignore_files,
-            )
-        except FileExistsError:
-            return
     
     def sort_files(self, src_path, include_subfolders):
         image_files = []
