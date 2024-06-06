@@ -7,6 +7,7 @@ from tkinter import DoubleVar, StringVar, BooleanVar
 
 from converter import AppLogic
 
+program_directory = Path(__file__).parent
 
 class Gui:
     def __init__(self, root=None):
@@ -15,7 +16,9 @@ class Gui:
         else:
             self.root = root
 
-        # self.root.iconbitmap('icon.ico')
+        icon_path = program_directory / 'icon.ico'
+        self.root.iconbitmap(str(icon_path))
+        
         self.root.title("WebP Crawler")
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
