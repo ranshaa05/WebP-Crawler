@@ -1,13 +1,22 @@
 from pathlib import Path
+import sys
 import threading
 
-import customtkinter as ctk
 from CTkMessagebox import CTkMessagebox
-from tkinter import DoubleVar, StringVar, BooleanVar
+import customtkinter as ctk
+from tkinter import BooleanVar, DoubleVar, StringVar
 
 from converter import AppLogic
 
-program_directory = Path(__file__).parent
+def get_resource_path(relative_path):
+    """Get the absolute path to a resource in a way that works for development and for PyInstaller/Nuitka bundles."""
+    try:
+        # PyInstaller/Nuitka creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = Path(__file__).parent
+
+    return Path(base_path) / relative_path
 
 class Gui:
     def __init__(self, root=None):
@@ -16,9 +25,9 @@ class Gui:
         else:
             self.root = root
 
-        icon_path = program_directory / 'icon.ico'
+        icon_path = get_resource_path('icon.ico')
         self.root.iconbitmap(str(icon_path))
-        
+
         self.root.title("WebP Crawler")
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
