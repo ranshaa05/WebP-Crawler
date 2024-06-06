@@ -126,9 +126,9 @@ class Gui:
         self.box2_text = ctk.CTkLabel(
             self.root, text="Destination folder:", font=self.font
         )
-        self.start_button = ctk.CTkButton(
+        self.convert_button = ctk.CTkButton(
             self.root,
-            text="Start",
+            text="Convert",
             font=self.font,
             fg_color=("light_green", "green"),
             hover_color=("light_red", "red"),
@@ -182,7 +182,7 @@ class Gui:
         self.format_dropdown.grid(
             row=5, column=3, sticky="w", padx=(45, 0), pady=(10, 0)
         )
-        self.start_button.grid(row=6, column=2)
+        self.convert_button.grid(row=6, column=2)
         self.progressbar_text.grid(row=7, column=2)
         self.progressbar.grid(row=8, column=2)
 
@@ -200,7 +200,7 @@ class Gui:
 
     def start_conversion_thread(self):
         """starts the conversion process in a separate thread to prevent the GUI from freezing."""
-        self.start_button.configure(state="disabled", text="Converting...")
+        self.convert_button.configure(state="disabled", text="Converting...")
         conversion_thread = threading.Thread(
             target=lambda: AppLogic().convert(self, self.format_dropdown.get().lower()),
             daemon=True,
