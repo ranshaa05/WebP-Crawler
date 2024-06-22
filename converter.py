@@ -12,36 +12,36 @@ coloredlogs.install(level="DEBUG", logger=log)
 # Supported image formats
 REGISTERED_EXTENSIONS = set(ext.lower() for ext in Image.registered_extensions().keys())
 
+
 class AppLogic:
     def create_folder_tree(self, src_path: Path, dst_path: Path):
         """Create a folder tree in the destination path that mirrors the source path, without copying files."""
-    
+
         if not dst_path.exists():
             dst_path.mkdir(parents=True, exist_ok=True)
-    
-        for item in src_path.rglob('*'):
+
+        for item in src_path.rglob("*"):
             if item.is_dir():
                 destination = dst_path / item.relative_to(src_path)
                 destination.mkdir(parents=True, exist_ok=True)
 
-    
     def sort_files(self, src_path, include_subfolders):
         image_files = []
         non_image_files = []
-    
+
         if include_subfolders:
             files = src_path.rglob("*.*")
         else:
             files = src_path.glob("*.*")
-    
+
         for file in files:
             extension = file.suffix
-    
+
             if extension.lower() in REGISTERED_EXTENSIONS:
                 image_files.append(file)
             else:
                 non_image_files.append(file)
-    
+
         return image_files, non_image_files
 
     def convert(self, gui, selected_format):
@@ -67,7 +67,7 @@ class AppLogic:
             are_you_sure = False
             for file in image_list:
                 image = None
-                full_dst_path = (dst_path / file.relative_to(src_path))
+                full_dst_path = dst_path / file.relative_to(src_path)
                 print(
                     f"Converting {full_dst_path.name} to {selected_format}...",
                     end=" " * (last_print_length - len(full_dst_path.name)) + "\r",
@@ -98,8 +98,8 @@ class AppLogic:
                         format=selected_format,
                         lossless=True if quality == "Lossless" else False,
                         quality=int(quality) if quality.isnumeric() else 100,
-                        subsampling=0
-                        )
+                        subsampling=0,
+                    )
                     image.close()
                     image = None
                 gui.update_progressbar(
@@ -108,8 +108,10 @@ class AppLogic:
                     num_of_skipped_files,
                     image_list_length,
                 )
-            if gui.post_conversion_dialogue(num_of_converted_files, len(non_image_list)):
-                for file in non_image_list: #TODO: this doesnt work for folders
+            if gui.post_conversion_dialogue(
+                num_of_converted_files, len(non_image_list)
+            ):
+                for file in non_image_list:  # TODO: this doesnt work for folders
                     copy2(
                         file,
                         dst_path / file.relative_to(src_path),

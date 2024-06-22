@@ -8,6 +8,7 @@ from tkinter import BooleanVar, DoubleVar, StringVar
 
 from converter import AppLogic
 
+
 def get_resource_path(relative_path):
     """Get the absolute path to a resource in a way that works for development and for PyInstaller/Nuitka bundles."""
     try:
@@ -18,6 +19,7 @@ def get_resource_path(relative_path):
 
     return Path(base_path) / relative_path
 
+
 class Gui:
     def __init__(self, root=None):
         if not root:
@@ -25,7 +27,7 @@ class Gui:
         else:
             self.root = root
 
-        icon_path = get_resource_path('icon.ico')
+        icon_path = get_resource_path("icon.ico")
         self.root.iconbitmap(str(icon_path))
 
         self.root.title("WebP Crawler")
@@ -40,7 +42,14 @@ class Gui:
         self.font = ("SegoeUI", 13)
 
         self.include_subfolders = BooleanVar(value=True)
-        self.include_subfolders_checkbox = ctk.CTkCheckBox(root, text="Include subfolders", variable=self.include_subfolders, onvalue=True, offvalue=False, font=self.font)
+        self.include_subfolders_checkbox = ctk.CTkCheckBox(
+            root,
+            text="Include subfolders",
+            variable=self.include_subfolders,
+            onvalue=True,
+            offvalue=False,
+            font=self.font,
+        )
 
         self.progress = StringVar()
         self.progress.set("0%")
@@ -222,7 +231,9 @@ class Gui:
         self.progress.set(f"{int(progress_percentage)}%")
         self.progressbar_percentage.set(progress_percentage / 100)
 
-    def post_conversion_dialogue(self, num_of_converted_files, num_of_failed_conversions):
+    def post_conversion_dialogue(
+        self, num_of_converted_files, num_of_failed_conversions
+    ):
         """displays the corresponding dialogue after the conversion process is complete."""
         if num_of_converted_files == 0:
             CTkMessagebox(
