@@ -1,13 +1,7 @@
-import logging
 from pathlib import Path
 from shutil import copy2
 
 from PIL import Image, UnidentifiedImageError
-import coloredlogs
-
-# logger setup
-log = logging.getLogger(__name__)
-coloredlogs.install(level="DEBUG", logger=log)
 
 # Supported image formats
 REGISTERED_EXTENSIONS = set(ext.lower() for ext in Image.registered_extensions().keys())
@@ -120,6 +114,5 @@ class AppLogic:
             gui.progress.set("0%")
             gui.progressbar_percentage.set("0")
             gui.overwrite_all = False  # reset overwrite all flag
-        else:
-            log.warn("Invalid parameters. No changes have been made.")
+
         gui.start_button.configure(state="normal", text="Start")
