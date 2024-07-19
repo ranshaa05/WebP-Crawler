@@ -14,6 +14,9 @@ REGISTERED_EXTENSIONS = set(ext.lower() for ext in Image.registered_extensions()
 
 
 class AppLogic:
+    def __init__(self):
+        self.stop_conversion = False
+        
     def create_folder_tree(self, src_path: Path, dst_path: Path):
         """Create a folder tree in the destination path that mirrors the source path, without copying files."""
 
@@ -50,6 +53,7 @@ class AppLogic:
         dst_path = Path(gui.fields[1].get().strip())
         quality = gui.quality_dropdown.get()
         if gui.check_params(src_path, dst_path):
+            gui.convert_button.configure(text="Stop", fg_color=("light red", "red"), hover_color=("dark red"), command=lambda: self.request_stop_conversion())
             dst_path = dst_path / src_path.name
             include_subfolders = gui.include_subfolders.get()
             if include_subfolders:
@@ -66,6 +70,8 @@ class AppLogic:
             num_of_skipped_files = 0
             are_you_sure = False
             for file in image_list:
+                if self.stop_conversion:
+                    break
                 image = None
                 full_dst_path = dst_path / file.relative_to(src_path)
                 print(
@@ -85,7 +91,7 @@ class AppLogic:
                     ):
                         num_of_skipped_files += 1
                         image.close()
-                        gui.update_progressbar(
+                        gui.update_progressbar( #TODO:this fails on repeated conversions. might be because it's not running in the gui (main) thread.
                             num_of_converted_files,
                             num_of_failed_conversions,
                             num_of_skipped_files,
@@ -108,6 +114,7 @@ class AppLogic:
                     num_of_skipped_files,
                     image_list_length,
                 )
+                log.info(f"{gui.progress.get()}% done.")
             if gui.post_conversion_dialogue(
                 num_of_converted_files, len(non_image_list)
             ):
@@ -119,7 +126,17 @@ class AppLogic:
             # Reset progress bar
             gui.progress.set("0%")
             gui.progressbar_percentage.set("0")
-            gui.overwrite_all = False  # reset overwrite all flag
+            gui.overwrite_all = False
         else:
             log.warn("Invalid parameters. No changes have been made.")
-        gui.start_button.configure(state="normal", text="Start")
+        gui.convert_button.configure(
+            state="normal",
+            text="Convert",
+            fg_color=("light green", "green"),
+            hover_color=("light red", "red"),
+            command=lambda: self.convert(gui, selected_format)
+            )
+        self.stop_conversion = False
+    
+    def request_stop_conversion(self):
+        self.stop_conversion = True

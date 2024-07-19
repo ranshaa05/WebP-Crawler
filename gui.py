@@ -209,7 +209,6 @@ class Gui:
 
     def start_conversion_thread(self):
         """starts the conversion process in a separate thread to prevent the GUI from freezing."""
-        self.convert_button.configure(state="disabled", text="Converting...")
         conversion_thread = threading.Thread(
             target=lambda: AppLogic().convert(self, self.format_dropdown.get().lower()),
             daemon=True,
