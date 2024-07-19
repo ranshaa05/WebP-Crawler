@@ -1,13 +1,7 @@
-import logging
 from pathlib import Path
 from shutil import copy2
 
 from PIL import Image, UnidentifiedImageError
-import coloredlogs
-
-# logger setup
-log = logging.getLogger(__name__)
-coloredlogs.install(level="DEBUG", logger=log)
 
 # Supported image formats
 REGISTERED_EXTENSIONS = set(ext.lower() for ext in Image.registered_extensions().keys())
@@ -114,7 +108,6 @@ class AppLogic:
                     num_of_skipped_files,
                     image_list_length,
                 )
-                log.info(f"{gui.progress.get()}% done.")
             if gui.post_conversion_dialogue(
                 num_of_converted_files, len(non_image_list)
             ):
@@ -128,7 +121,7 @@ class AppLogic:
             gui.progressbar_percentage.set("0")
             gui.overwrite_all = False
         else:
-            log.warn("Invalid parameters. No changes have been made.")
+            print("Invalid parameters. No changes have been made.")
         gui.convert_button.configure(
             state="normal",
             text="Convert",
