@@ -93,7 +93,10 @@ class Gui:
         elif (dst_path / src_basename).is_dir():
             use_folder = CTkMessagebox(
                 title="Destination folder already exists",
-                message=f"Destination folder already has a folder named '{src_basename}' in it.\nWould you like to use it anyway?",
+                message=(
+                    f"Destination already contains '{src_basename}' inside it."
+                    "\nWould you like to use it anyway?",
+                ),
                 icon="question",
                 option_1="Yes",
                 option_2="No",
@@ -118,7 +121,7 @@ class Gui:
         return False
 
     def browse(self, path_field, field_num):
-        """opens a file dialog and inserts the selected path into the corresponding entry field."""
+        """opens a file selection window and inserts the selected path into the corresponding entry field."""
         path = ctk.filedialog.askdirectory(
             mustexist=True,
             title=f"Select {"Source" if field_num == 0 else "Destination"} Folder",
@@ -131,7 +134,9 @@ class Gui:
         self.header = ctk.CTkLabel(
             self.root, text="─── WebP Crawler ───", font=("Helvetica", 20, "bold")
         )
-        self.box1_text = ctk.CTkLabel(self.root, text="Source folder:", font=self.font)
+        self.box1_text = ctk.CTkLabel(
+            self.root, text="Source folder:", font=self.font
+            )
         self.box2_text = ctk.CTkLabel(
             self.root, text="Destination folder:", font=self.font
         )
@@ -143,7 +148,9 @@ class Gui:
             hover_color=("light_red", "red"),
             command=self.start_conversion_thread,
         )
-        self.box3_text = ctk.CTkLabel(self.root, text="Quality:", font=self.font)
+        self.box3_text = ctk.CTkLabel(
+            self.root, text="Quality:", font=self.font
+            )
         self.quality_dropdown = ctk.CTkComboBox(
             self.root,
             state="readonly",
@@ -153,7 +160,9 @@ class Gui:
         )
         self.quality_dropdown.set("Lossless")
 
-        self.box4_text = ctk.CTkLabel(self.root, text="Format:", font=self.font)
+        self.box4_text = ctk.CTkLabel(
+            self.root, text="Format:", font=self.font
+            )
         self.format_dropdown = ctk.CTkComboBox(
             self.root,
             state="readonly",
@@ -224,7 +233,9 @@ class Gui:
     ):
         """updates the progress bar and its text."""
         num_of_processed_files = (
-            num_of_image_files + num_of_failed_conversions + num_of_skipped_files
+            num_of_image_files
+            + num_of_failed_conversions
+            + num_of_skipped_files
         )
         progress_percentage = num_of_processed_files / file_list_length * 100
         self.progress.set(f"{int(progress_percentage)}%")
@@ -233,7 +244,7 @@ class Gui:
     def post_conversion_dialogue(
         self, num_of_converted_files, num_of_failed_conversions
     ):
-        """displays the corresponding dialogue after the conversion process is complete."""
+        """displays the corresponding dialogue after conversion."""
         if num_of_converted_files == 0:
             CTkMessagebox(
                 title="Error",
@@ -245,9 +256,11 @@ class Gui:
         elif num_of_failed_conversions > 0:
             copy_non_images = CTkMessagebox(
                 title="Copy non-images?",
-                message=f"""{num_of_converted_files} files were successfully converted.
-Found {num_of_failed_conversions} files that are not images.
-Would you like to copy them to the destination folder(s)?""",
+                message=(
+                    f"{num_of_converted_files} files were successfully converted."
+                    "\nFound {num_of_failed_conversions} non-image files."
+                    "\nWould you like to copy them to the destination?"
+                ),
                 icon="question",
                 option_1="Yes",
                 option_2="No",
@@ -270,7 +283,10 @@ Would you like to copy them to the destination folder(s)?""",
     def confirm_overwrite_file(self, file_name, selected_format):
         overwrite = CTkMessagebox(
             title="File already exists",
-            message=f'File "{file_name}.{selected_format}" already exists in the destination folder.\nWould you like to overwrite it?',
+            message=(
+                f'File "{file_name}.{selected_format}" already exists in the destination folder.'
+                '\nWould you like to overwrite it?',
+            ),
             icon="warning",
             option_1="Yes",
             option_2="No",
@@ -296,7 +312,10 @@ Would you like to copy them to the destination folder(s)?""",
     def confirm_are_you_sure(self):
         are_you_sure = CTkMessagebox(
             title="Are you sure?",
-            message="Are you sure you want to overwrite all files that already exist in the destination folder?\nThis action cannot be undone.",
+            message=(
+                "Are you sure you want to overwrite all files that already exist in the destination folder?"
+                "\nThis action cannot be undone.",
+            ),
             icon="warning",
             option_1="Yes",
             option_2="No",
@@ -308,7 +327,7 @@ Would you like to copy them to the destination folder(s)?""",
             return False
 
     def show_overwrite_dialogues(self, new_dst_path, are_you_sure, selected_format):
-        """check if file already exists and prompt user to overwrite or skip."""
+        """checks if file already exists and prompts user to overwrite or skip."""
         new_dst_path = Path(new_dst_path)
         if (new_dst_path.with_suffix("." + selected_format)).is_file():
             if self.overwrite_all:
