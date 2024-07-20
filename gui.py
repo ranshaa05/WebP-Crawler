@@ -1,10 +1,10 @@
-from pathlib import Path
 import sys
 import threading
-
-from CTkMessagebox import CTkMessagebox
-import customtkinter as ctk
+from pathlib import Path
 from tkinter import BooleanVar, DoubleVar, StringVar
+
+import customtkinter as ctk
+from CTkMessagebox import CTkMessagebox
 
 from converter import AppLogic
 

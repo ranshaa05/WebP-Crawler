@@ -10,7 +10,7 @@ REGISTERED_EXTENSIONS = set(ext.lower() for ext in Image.registered_extensions()
 class AppLogic:
     def __init__(self):
         self.stop_conversion = False
-        
+
     def create_folder_tree(self, src_path: Path, dst_path: Path):
         """Create a folder tree in the destination path that mirrors the source path, without copying files."""
 
