@@ -6,7 +6,7 @@ from tkinter import BooleanVar, DoubleVar, StringVar
 import customtkinter as ctk
 from CTkMessagebox import CTkMessagebox
 
-from converter import AppLogic
+from converter import Converter
 
 
 def get_resource_path(relative_path):
@@ -128,6 +128,8 @@ class Gui:
         )
         path_field[field_num].delete(0, ctk.END)
         path_field[field_num].insert(0, path)
+        # path_field[field_num].insert(0, r"")
+        # path_field[field_num+1].insert(0, r"")
 
     def build_window(self):
         """builds the window and its widgets."""
@@ -219,7 +221,7 @@ class Gui:
     def start_conversion_thread(self):
         """starts the conversion process in a separate thread to prevent the GUI from freezing."""
         conversion_thread = threading.Thread(
-            target=lambda: AppLogic().convert(self, self.format_dropdown.get().lower()),
+            target=lambda: Converter().convert(self, self.format_dropdown.get().lower()),
             daemon=True,
         )
         conversion_thread.start()
@@ -258,7 +260,7 @@ class Gui:
                 title="Copy non-images?",
                 message=(
                     f"{num_of_converted_files} files were successfully converted."
-                    "\nFound {num_of_failed_conversions} non-image files."
+                    f"\nFound {num_of_failed_conversions} non-image files."
                     "\nWould you like to copy them to the destination?"
                 ),
                 icon="question",
