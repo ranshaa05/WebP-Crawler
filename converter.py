@@ -1,15 +1,20 @@
 from pathlib import Path
 from shutil import copy2
 
+from CTkMessagebox import CTkMessagebox
 from PIL import Image, UnidentifiedImageError
 
 # Supported image formats
 REGISTERED_EXTENSIONS = {ext.lower() for ext in Image.registered_extensions()}
+# Max resolution for each format, based on file format specs.
+MAX_RESOLUTION = {"webp": (16383, 16383), "png": (65535, 65535)}
 
 
 class AppLogic:
     def __init__(self):
         self.stop_conversion = False
+        self.downscale_all = False
+        self.disable_bomb_check_all = False
 
     def create_folder_tree(self, src_path: Path, dst_path: Path):
         """Copy the source folder tree in the destination path."""
@@ -85,7 +90,64 @@ class AppLogic:
             except UnidentifiedImageError:
                 num_of_failed_conversions += 1
                 non_image_list.append(file)
+            except Image.DecompressionBombError:
+                if not self.disable_bomb_check_all:
+                    response = CTkMessagebox(
+                        title="Image too large",
+                        message=f"The image {file.name} is very large and could be a decompression bomb, which could harm your computer.\n\nWould you like to open it anyway?",
+                        icon="warning",
+                        option_1="Yes",
+                        option_2="No",
+                        option_3="Yes to all",
+                    )
+                    if response.get() == "No" or response is None:
+                        num_of_skipped_files += 1
+                        gui.update_progressbar(
+                            num_of_converted_files,
+                            num_of_failed_conversions,
+                            num_of_skipped_files,
+                            image_list_length,
+                        )
+                        continue
+                    elif response.get() == "Yes to all":
+                        self.disable_bomb_check_all = True
+                
+                original_max_image_pixels = Image.MAX_IMAGE_PIXELS
+                Image.MAX_IMAGE_PIXELS = None
+                try:
+                    image = Image.open(file)
+                    num_of_converted_files += 1
+                except Exception as e:
+                    print(f"Failed to open {file.name} after disabling decompression bomb check: {e}")
+                    num_of_failed_conversions += 1
+                    non_image_list.append(file)
+                finally:
+                    Image.MAX_IMAGE_PIXELS = original_max_image_pixels
             if image:
+                max_width, max_height = MAX_RESOLUTION.get(selected_format, (None, None))
+                if max_width and max_height and (image.width > max_width or image.height > max_height):
+                    if not self.downscale_all:
+                        response = CTkMessagebox(
+                            title=f"Image too large for {selected_format}",
+                            message=f"The image {file.name} has a resolution of {image.width}x{image.height}, which is larger than the maximum supported by the {selected_format} format ({max_width}x{max_height}).\n\nDo you want to downscale or skip it?",
+                            icon="question",
+                            option_1="Downscale",
+                            option_2="Skip",
+                            option_3="Downscale all",
+                        )
+                        if response.get() == "Skip" or response is None:
+                            num_of_skipped_files += 1
+                            image.close()
+                            gui.update_progressbar(
+                                num_of_converted_files,
+                                num_of_failed_conversions,
+                                num_of_skipped_files,
+                                image_list_length,
+                            )
+                            continue
+                        elif response == "Yes to all":
+                            self.downscale_all = True
+                    image.thumbnail((max_width, max_height))
                 if not gui.show_overwrite_dialogues(
                     full_dst_path, are_you_sure, selected_format
                 ):
@@ -126,13 +188,16 @@ class AppLogic:
         gui.progress.set("0%")
         gui.progressbar_percentage.set("0")
         gui.overwrite_all = False
+        self.downscale_all = False
+        self.disable_bomb_check_all = False
+        gui.show_overwrite_all_dialogue = True
 
         gui.convert_button.configure(
             state="normal",
             text="Convert",
             fg_color=("light green", "green"),
             hover_color=("light red", "red"),
-            command=lambda: self.convert(gui, selected_format),  # TODO: this is supposed to be starting a thread
+            command=gui.start_conversion_thread,
         )
         self.stop_conversion = False
 

@@ -104,7 +104,8 @@ class Gui:
             if use_folder.get() == "Yes":
                 return True
             else:
-                title, message = error_messages["different_folder"]
+                title, message = error_messages["different_folder"] #TODO: "no" doesnt stop conversion
+                return False
 
         elif str(src_path) in str(dst_path):
             title, message = error_messages["dst_in_src"]
@@ -267,7 +268,7 @@ class Gui:
             )
             if copy_non_images.get() == "Yes":
                 return True
-            elif copy_non_images.get() == "No":
+            else:
                 return False
 
         else:
@@ -293,7 +294,7 @@ class Gui:
         )
         if overwrite.get() == "Yes":
             return True
-        elif overwrite.get() == "No":
+        else:
             return False
 
     def confirm_overwrite_all(self):
@@ -306,7 +307,7 @@ class Gui:
         )
         if overwrite_all.get() == "Yes":
             return True
-        elif overwrite_all.get() == "No":
+        else:
             return False
 
     def confirm_are_you_sure(self):
@@ -323,7 +324,7 @@ class Gui:
         )
         if are_you_sure.get() == "Yes":
             return True
-        elif are_you_sure.get() == "No":
+        else:
             return False
 
     def show_overwrite_dialogues(self, new_dst_path, are_you_sure, selected_format):
