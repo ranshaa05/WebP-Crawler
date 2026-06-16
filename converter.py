@@ -4,72 +4,67 @@ from shutil import copy2
 from CTkMessagebox import CTkMessagebox
 from PIL import Image, UnidentifiedImageError
 
-# Supported image formats
-REGISTERED_EXTENSIONS = {ext.lower() for ext in Image.registered_extensions()}
+import filesystem_utils
+
 # Max resolution for each format, based on file format specs.
 MAX_RESOLUTION = {"webp": (16383, 16383), "png": (65535, 65535)}
 
 
-class AppLogic:
+class Converter:
     def __init__(self):
         self.stop_conversion = False
         self.downscale_all = False
         self.disable_bomb_check_all = False
+        self.src_path = None
+        self.dst_path = None
+        self.quality = None
+        self.include_subfolders = None
+        self.selected_format = None
 
-    def create_folder_tree(self, src_path: Path, dst_path: Path):
-        """Copy the source folder tree in the destination path."""
-
-        if not dst_path.exists():
-            dst_path.mkdir(parents=True, exist_ok=True)
-
-        for item in src_path.rglob("*"):
-            if item.is_dir():
-                destination = dst_path / item.relative_to(src_path)
-                destination.mkdir(parents=True, exist_ok=True)
-
-    def sort_files(self, src_path, include_subfolders):
-        image_files = []
-        non_image_files = []
-
-        if include_subfolders:
-            files = src_path.rglob("*.*")
-        else:
-            files = src_path.glob("*.*")
-
-        for file in files:
-            extension = file.suffix
-
-            if extension.lower() in REGISTERED_EXTENSIONS:
-                image_files.append(file)
-            else:
-                non_image_files.append(file)
-
-        return image_files, non_image_files
-
-    def convert(self, gui, selected_format):
-        """Convert images in the source path to the selected format and save them in the destination path."""
-        src_path = Path(gui.fields[0].get().strip())
-        dst_path = Path(gui.fields[1].get().strip())
-        quality = gui.quality_dropdown.get()
-        if not gui.check_params(src_path, dst_path):
+    def __update_ui_params__(self, gui):
+        self.src_path = Path(gui.fields[0].get().strip())
+        self.dst_path = Path(gui.fields[1].get().strip())
+        self.quality = gui.quality_dropdown.get()
+        self.include_subfolders = gui.include_subfolders.get()
+        self.selected_format = gui.format_dropdown.get().lower()
+        if not gui.check_params(self.src_path, self.dst_path):
             print("Invalid parameters. No changes have been made.")
+            return None, None, None, None, None
+    
+    def __pre_conversion_setup__(self, gui):
+        self.__update_ui_params__(gui)
+
         gui.convert_button.configure(
             text="Stop",
             fg_color=("light red", "red"),
             hover_color=("dark red"),
             command=lambda: self.request_stop_conversion(),
         )
-        dst_path = dst_path / src_path.name
-        include_subfolders = gui.include_subfolders.get()
-        if include_subfolders:
-            self.create_folder_tree(src_path, dst_path)
-        else:
-            dst_path.mkdir(parents=True, exist_ok=True)
+        
+        self.dst_path = self.dst_path / self.src_path.name
+        filesystem_utils.make_destination_folders(self.src_path, self.dst_path, self.include_subfolders)
 
-        image_list,non_image_list = self.sort_files(src_path, include_subfolders)
+        image_list, non_image_list, already_formatted_images = filesystem_utils.detect_images(self.src_path, self.include_subfolders, self.selected_format)
+        return (
+            image_list,
+            non_image_list,
+            already_formatted_images
+        )
 
+    def convert(self, gui):
+        """Convert images in the source path to the selected format and save them in the destination path."""
+        (
+            image_list,
+            non_image_list,
+            already_formatted_images
+        ) = self.__pre_conversion_setup__(gui)
+        if not all((self.src_path, self.dst_path, self.quality, image_list)):
+            return
+        
+        reencode_images = gui.reencode_images_of_same_format_dialogue(self.selected_format, len(already_formatted_images)) if already_formatted_images else False
+        image_list = image_list if reencode_images else [img for img in image_list if img not in already_formatted_images]
         image_list_length = len(image_list)
-        last_print_length = 0
+
         num_of_converted_files = 0
         num_of_failed_conversions = 0
         num_of_skipped_files = 0
@@ -78,12 +73,8 @@ class AppLogic:
             if self.stop_conversion:
                 break
             image = None
-            full_dst_path = dst_path / file.relative_to(src_path)
-            print(
-                f"Converting {full_dst_path.name} to {selected_format}...",
-                end=" " * (last_print_length - len(full_dst_path.name)) + "\r",
-            )
-            last_print_length = len(f"{full_dst_path.name} to {selected_format}")
+            full_dst_path = self.dst_path / file.relative_to(self.src_path)
+            print(f"\x1b[2KConverting {full_dst_path.name} to {self.selected_format}...", end="\r")
             try:
                 image = Image.open(file)
                 num_of_converted_files += 1
@@ -116,23 +107,23 @@ class AppLogic:
                 Image.MAX_IMAGE_PIXELS = None
                 try:
                     image = Image.open(file)
-                    num_of_converted_files += 1
                 except Exception as e:
                     print(f"Failed to open {file.name} after disabling decompression bomb check: {e}")
                     num_of_failed_conversions += 1
                     non_image_list.append(file)
                 finally:
                     Image.MAX_IMAGE_PIXELS = original_max_image_pixels
+
             if image:
-                max_width, max_height = MAX_RESOLUTION.get(selected_format, (None, None))
+                max_width, max_height = MAX_RESOLUTION.get(self.selected_format, (None, None))
                 if max_width and max_height and (image.width > max_width or image.height > max_height):
                     if not self.downscale_all:
                         response = CTkMessagebox(
-                            title=f"Image too large for {selected_format}",
-                            message=f"The image {file.name} has a resolution of {image.width}x{image.height}, which is larger than the maximum supported by the {selected_format} format ({max_width}x{max_height}).\n\nDo you want to downscale or skip it?",
+                            title=f"Image too large for {self.selected_format}",
+                            message=f"The image {file.name} has a resolution of {image.width}x{image.height}, which is larger than the maximum supported by the {self.selected_format} format ({max_width}x{max_height}).\n\nSkip or downscale it?",
                             icon="question",
-                            option_1="Downscale",
-                            option_2="Skip",
+                            option_1="Skip",
+                            option_2="Downscale",
                             option_3="Downscale all",
                         )
                         if response.get() == "Skip" or response is None:
@@ -145,11 +136,19 @@ class AppLogic:
                                 image_list_length,
                             )
                             continue
-                        elif response == "Yes to all":
+                        elif response.get() == "Downscale":
+                            pass
+                        elif response.get() == "Downscale all":
                             self.downscale_all = True
-                    image.thumbnail((max_width, max_height))
+                            num_of_converted_files += 1
+
+                    original_max = Image.MAX_IMAGE_PIXELS # remove decomp bomb check for downscaling only
+                    Image.MAX_IMAGE_PIXELS = None
+                    image.thumbnail((max_width, max_height)) # resizes the image
+                    Image.MAX_IMAGE_PIXELS = original_max
+                    
                 if not gui.show_overwrite_dialogues(
-                    full_dst_path, are_you_sure, selected_format
+                    full_dst_path, are_you_sure, self.selected_format
                 ):
                     num_of_skipped_files += 1
                     image.close()
@@ -162,14 +161,15 @@ class AppLogic:
                     continue  # continue if user skips overwriting this file.
 
                 image.save(
-                    full_dst_path.with_suffix("." + selected_format),
-                    format=selected_format,
-                    lossless=True if quality == "Lossless" else False,
-                    quality=int(quality) if quality.isnumeric() else 100,
+                    full_dst_path.with_suffix("." + self.selected_format),
+                    format=self.selected_format,
+                    lossless=True if self.quality == "Lossless" else False,
+                    quality=int(self.quality) if self.quality.isnumeric() else 100,
                     subsampling=0,
                 )
                 image.close()
                 image = None
+
             gui.update_progressbar(
                 num_of_converted_files,
                 num_of_failed_conversions,
@@ -177,18 +177,25 @@ class AppLogic:
                 image_list_length,
             )
         if gui.post_conversion_dialogue(
-            num_of_converted_files, len(non_image_list)
+            num_of_converted_files, len(non_image_list), len(already_formatted_images) if not reencode_images else 0
         ):
             for file in non_image_list:  # TODO: this doesnt work for folders
                 copy2(
                     file,
-                    dst_path / file.relative_to(src_path),
+                    self.dst_path / file.relative_to(self.src_path),
+                )
+
+        if not reencode_images:
+            for file in already_formatted_images:
+                copy2(
+                    file,
+                    self.dst_path / file.relative_to(self.src_path),
                 )
         # Reset progress bar
         gui.progress.set("0%")
         gui.progressbar_percentage.set("0")
         gui.overwrite_all = False
-        self.downscale_all = False
+        self.skip_all = False
         self.disable_bomb_check_all = False
         gui.show_overwrite_all_dialogue = True
 

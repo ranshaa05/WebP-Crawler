@@ -6,7 +6,7 @@ from tkinter import BooleanVar, DoubleVar, StringVar
 import customtkinter as ctk
 from CTkMessagebox import CTkMessagebox
 
-from converter import AppLogic
+from converter import Converter
 
 
 def get_resource_path(relative_path):
@@ -93,10 +93,8 @@ class Gui:
         elif (dst_path / src_basename).is_dir():
             use_folder = CTkMessagebox(
                 title="Destination folder already exists",
-                message=(
-                    f"Destination already contains '{src_basename}' inside it."
-                    "\nWould you like to use it anyway?",
-                ),
+                message=f"Destination already contains folder '{src_basename}' inside it."
+                "\nWould you like to use it anyway?",
                 icon="question",
                 option_1="Yes",
                 option_2="No",
@@ -220,7 +218,7 @@ class Gui:
     def start_conversion_thread(self):
         """starts the conversion process in a separate thread to prevent the GUI from freezing."""
         conversion_thread = threading.Thread(
-            target=lambda: AppLogic().convert(self, self.format_dropdown.get().lower()),
+            target=lambda: Converter().convert(self),
             daemon=True,
         )
         conversion_thread.start()
@@ -243,7 +241,7 @@ class Gui:
         self.progressbar_percentage.set(progress_percentage / 100)
 
     def post_conversion_dialogue(
-        self, num_of_converted_files, num_of_failed_conversions
+        self, num_of_converted_files, num_of_failed_conversions, num_of_already_formatted_images
     ):
         """displays the corresponding dialogue after conversion."""
         if num_of_converted_files == 0:
@@ -257,11 +255,9 @@ class Gui:
         elif num_of_failed_conversions > 0:
             copy_non_images = CTkMessagebox(
                 title="Copy non-images?",
-                message=(
-                    f"{num_of_converted_files} files were successfully converted."
-                    "\nFound {num_of_failed_conversions} non-image files."
-                    "\nWould you like to copy them to the destination?"
-                ),
+                message=f"{num_of_converted_files} files were successfully converted."
+                "\nFound {num_of_failed_conversions} non-image files."
+                "\nWould you like to copy them to the destination?",
                 icon="question",
                 option_1="Yes",
                 option_2="No",
@@ -272,22 +268,38 @@ class Gui:
                 return False
 
         else:
+            message_content = f"{num_of_converted_files} files were successfully converted!"
+            if num_of_already_formatted_images > 0:
+                message_content += f"\nCopied {num_of_already_formatted_images} {self.format_dropdown.get().upper()} files!"
             CTkMessagebox(
                 title="Conversion complete!",
-                message=f"{num_of_converted_files} files were successfully converted!",
+                message=message_content,
                 icon="check",
                 option_1="Ok",
             )
+            return False
+        
+    def reencode_images_of_same_format_dialogue(self, selected_format, num_of_already_formatted_images):
+        if num_of_already_formatted_images == 0:
+            return False
+        reencode_images = CTkMessagebox(
+            title="Re-encode images?",
+            message=f"Found {num_of_already_formatted_images} images that are already {selected_format.upper()}.\nWould you like to re-process them, or copy as-is?",
+            icon="question",
+            option_1="Copy",
+            option_2="Re-encode",
+        )
+        if reencode_images.get() == "Re-encode":
+            return True
+        elif reencode_images.get() == "Copy":
             return False
 
     # file overwrite dialogues
     def confirm_overwrite_file(self, file_name, selected_format):
         overwrite = CTkMessagebox(
             title="File already exists",
-            message=(
-                f'File "{file_name}.{selected_format}" already exists in the destination folder.'
-                '\nWould you like to overwrite it?',
-            ),
+            message=f'File "{file_name}.{selected_format}" already exists in the destination folder.'
+            '\nWould you like to overwrite it?',
             icon="warning",
             option_1="Yes",
             option_2="No",
@@ -313,10 +325,8 @@ class Gui:
     def confirm_are_you_sure(self):
         are_you_sure = CTkMessagebox(
             title="Are you sure?",
-            message=(
-                "Are you sure you want to overwrite all files that already exist in the destination folder?"
-                "\nThis action cannot be undone.",
-            ),
+            message="Are you sure you want to overwrite all files that already exist in the destination folder?"
+            "\nThis action cannot be undone.",
             icon="warning",
             option_1="Yes",
             option_2="No",
