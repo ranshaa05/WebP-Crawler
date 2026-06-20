@@ -27,9 +27,6 @@ class Converter:
         self.quality = gui.quality_dropdown.get()
         self.include_subfolders = gui.include_subfolders.get()
         self.selected_format = gui.format_dropdown.get().lower()
-        if not gui.check_params(self.src_path, self.dst_path):
-            print("Invalid parameters. No changes have been made.")
-            return None, None, None, None, None
     
     def __pre_conversion_setup__(self, gui):
         self.__update_ui_params__(gui)
@@ -38,7 +35,7 @@ class Converter:
             text="Stop",
             fg_color=("light red", "red"),
             hover_color=("dark red"),
-            command=lambda: self.request_stop_conversion(),
+            command=lambda: self.__request_stop_conversion__(),
         )
         
         self.dst_path = self.dst_path / self.src_path.name
@@ -58,7 +55,9 @@ class Converter:
             non_image_list,
             already_formatted_images
         ) = self.__pre_conversion_setup__(gui)
-        if not all((self.src_path, self.dst_path, self.quality, image_list)):
+        if not gui.check_params(self.src_path, self.dst_path):
+            print("Invalid parameters. No changes have been made.")
+            self.__reset_convert_button__(gui)
             return
         
         reencode_images = gui.reencode_images_of_same_format_dialogue(self.selected_format, len(already_formatted_images)) if already_formatted_images else False
@@ -199,6 +198,13 @@ class Converter:
         self.disable_bomb_check_all = False
         gui.show_overwrite_all_dialogue = True
 
+        self.__reset_convert_button__(gui)
+        self.stop_conversion = False
+
+    def __request_stop_conversion__(self):
+        self.stop_conversion = True
+
+    def __reset_convert_button__(self, gui):
         gui.convert_button.configure(
             state="normal",
             text="Convert",
@@ -208,5 +214,4 @@ class Converter:
         )
         self.stop_conversion = False
 
-    def request_stop_conversion(self):
-        self.stop_conversion = True
+    
