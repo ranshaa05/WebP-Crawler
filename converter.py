@@ -29,15 +29,13 @@ class Converter:
         self.selected_format = gui.format_dropdown.get().lower()
     
     def __pre_conversion_setup__(self, gui):
-        self.__update_ui_params__(gui)
-
         gui.convert_button.configure(
             text="Stop",
             fg_color=("light red", "red"),
             hover_color=("dark red"),
             command=lambda: self.__request_stop_conversion__(),
         )
-        
+
         filesystem_utils.make_destination_folders(self.src_path, self.dst_path, self.include_subfolders)
 
         image_list, non_image_list, already_formatted_images = filesystem_utils.detect_images(self.src_path, self.include_subfolders, self.selected_format)
@@ -49,15 +47,16 @@ class Converter:
 
     def convert(self, gui):
         """Convert images in the source path to the selected format and save them in the destination path."""
+        self.__update_ui_params__(gui)
+        if not gui.check_params(self.src_path, self.dst_path):
+            self.__reset_convert_button__(gui)
+            return # TODO: all of this pre-conversion stuff shouldnt be running in multithreading
         (
             image_list,
             non_image_list,
             already_formatted_images
         ) = self.__pre_conversion_setup__(gui)
-        if not gui.check_params(self.src_path, self.dst_path):
-            print("Invalid parameters. No changes have been made.")
-            self.__reset_convert_button__(gui)
-            return # TODO: all of this pre-conversion stuff shouldnt be running in multithreading
+        
 
         self.dst_path = self.dst_path / self.src_path.name
         reencode_images = gui.reencode_images_of_same_format_dialogue(self.selected_format, len(already_formatted_images)) if already_formatted_images else False

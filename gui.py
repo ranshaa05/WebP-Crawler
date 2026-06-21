@@ -103,6 +103,7 @@ class Gui:
                 return True
             else:
                 title, message = error_messages["different_folder"]
+                print("Invalid parameters. No changes have been made.")
                 return False
 
         elif str(src_path) in str(dst_path):
@@ -117,6 +118,7 @@ class Gui:
             icon="cancel",
             sound=True,
         )
+        print("Invalid parameters. No changes have been made.")
         return False
 
     def browse(self, path_field, field_num):
