@@ -12,7 +12,7 @@ def create_folder_tree(src_path: Path, dst_path: Path):
 
     for item in src_path.rglob("*"):
         if item.is_dir():
-            destination = dst_path / item.relative_to(src_path)
+            destination = dst_path / src_path.name / item.relative_to(src_path)
             destination.mkdir(parents=True, exist_ok=True)
 
 def make_destination_folders(src_path, dst_path, include_subfolders):

@@ -38,7 +38,6 @@ class Converter:
             command=lambda: self.__request_stop_conversion__(),
         )
         
-        self.dst_path = self.dst_path / self.src_path.name
         filesystem_utils.make_destination_folders(self.src_path, self.dst_path, self.include_subfolders)
 
         image_list, non_image_list, already_formatted_images = filesystem_utils.detect_images(self.src_path, self.include_subfolders, self.selected_format)
@@ -58,8 +57,9 @@ class Converter:
         if not gui.check_params(self.src_path, self.dst_path):
             print("Invalid parameters. No changes have been made.")
             self.__reset_convert_button__(gui)
-            return
-        
+            return # TODO: all of this pre-conversion stuff shouldnt be running in multithreading
+
+        self.dst_path = self.dst_path / self.src_path.name
         reencode_images = gui.reencode_images_of_same_format_dialogue(self.selected_format, len(already_formatted_images)) if already_formatted_images else False
         image_list = image_list if reencode_images else [img for img in image_list if img not in already_formatted_images]
         image_list_length = len(image_list)
@@ -199,7 +199,6 @@ class Converter:
         gui.show_overwrite_all_dialogue = True
 
         self.__reset_convert_button__(gui)
-        self.stop_conversion = False
 
     def __request_stop_conversion__(self):
         self.stop_conversion = True

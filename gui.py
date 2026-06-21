@@ -70,7 +70,7 @@ class Gui:
                 "Error",
                 "Source and destination folders cannot be the same.",
             ),
-            "not_exist": ("Error", "The source path does not exist."),
+            "src_not_exist": ("Error", "The source path does not exist."),
             "different_folder": (
                 "Select a different folder.",
                 "Please select a different destination folder.",
@@ -86,7 +86,7 @@ class Gui:
         if str(src_path) == "." or str(dst_path) == ".":
             title, message = error_messages["empty"]
         elif not src_path.exists():
-            title, message = error_messages["not_exist"]
+            title, message = error_messages["src_not_exist"]
         elif src_path == dst_path:
             title, message = error_messages["same_path"]
 
@@ -102,7 +102,7 @@ class Gui:
             if use_folder.get() == "Yes":
                 return True
             else:
-                title, message = error_messages["different_folder"] #TODO: "no" doesnt stop conversion
+                title, message = error_messages["different_folder"]
                 return False
 
         elif str(src_path) in str(dst_path):
