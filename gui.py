@@ -66,6 +66,7 @@ class Gui:
         """checks that the source and destination paths are valid and returns them if they are."""
         error_messages = {
             "empty": ("Error", "You must enter both source and destination paths."),
+            "not_absolute": ("Error", "Source and destination paths must be absolute."),
             "same_path": (
                 "Error",
                 "Source and destination folders cannot be the same.",
@@ -85,10 +86,15 @@ class Gui:
 
         if str(src_path) == "." or str(dst_path) == ".":
             title, message = error_messages["empty"]
+        elif not src_path.is_absolute() or not dst_path.is_absolute():
+            title, message = error_messages["not_absolute"]
         elif not src_path.exists():
             title, message = error_messages["src_not_exist"]
         elif src_path == dst_path:
             title, message = error_messages["same_path"]
+
+        elif dst_path.is_relative_to(src_path):
+            title, message = error_messages["dst_in_src"]
 
         elif (dst_path / src_basename).is_dir():
             use_folder = CTkMessagebox(
@@ -105,9 +111,6 @@ class Gui:
                 title, message = error_messages["different_folder"]
                 print("Invalid parameters. No changes have been made.")
                 return False
-
-        elif str(src_path) in str(dst_path):
-            title, message = error_messages["dst_in_src"]
 
         else:
             return True
