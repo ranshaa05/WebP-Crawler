@@ -6,6 +6,8 @@ from PIL import Image, UnidentifiedImageError
 
 import filesystem_utils
 
+import path_validator
+
 # Max resolution for each format, based on file format specs.
 MAX_RESOLUTION = {"webp": (16383, 16383), "png": (65535, 65535)}
 
@@ -44,11 +46,12 @@ class Converter:
             non_image_list,
             already_formatted_images
         )
+    
 
     def convert(self, gui):
         """Convert images in the source path to the selected format and save them in the destination path."""
         self.__update_ui_params__(gui)
-        if not gui.check_params(self.src_path, self.dst_path):
+        if not path_validator.check_paths(self.src_path, self.dst_path):
             self.__reset_convert_button__(gui)
             return # TODO: all of this pre-conversion stuff shouldnt be running in multithreading
         (

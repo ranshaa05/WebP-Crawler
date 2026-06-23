@@ -1,4 +1,3 @@
-import sys
 import threading
 from pathlib import Path
 from tkinter import BooleanVar, DoubleVar, StringVar
@@ -9,38 +8,27 @@ from CTkMessagebox import CTkMessagebox
 from converter import Converter
 
 
-def get_resource_path(relative_path):
-    """Get the absolute path to a resource in a way that works for development and for PyInstaller/Nuitka bundles."""
-    try:
-        # PyInstaller/Nuitka creates a temp folder and stores path in _MEIPASS
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = Path(__file__).parent
-
-    return Path(base_path) / relative_path
-
-
 class Gui:
-    def __init__(self, root=None):
+    def __init__(self, icon_path,root=None):
         if not root:
             self.root = ctk.CTk()
         else:
             self.root = root
-
-        icon_path = get_resource_path("icon.ico")
+        
         self.root.iconbitmap(str(icon_path))
-
         self.root.title("WebP Crawler")
-        screen_width = self.root.winfo_screenwidth()
-        screen_height = self.root.winfo_screenheight()
+        screen_width, screen_height = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
+        min_window_size = "615x225"
         window_size = f"{int(screen_width * 0.32)}x{int(screen_height * 0.21)}"
-        min_window_size = "614x226"
         self.root.geometry(
             window_size if window_size >= min_window_size else min_window_size
         )
         self.root.resizable(False, False)
-        self.font = ("SegoeUI", 13)
+        self.font = ("SegoeUI", 14)
 
+        # ui element variables
+        self.fields = []
+        self.browse_buttons = []
         self.include_subfolders = BooleanVar(value=True)
         self.include_subfolders_checkbox = ctk.CTkCheckBox(
             root,
@@ -57,86 +45,22 @@ class Gui:
             DoubleVar()
         )  # hacky way to include the "%" sign in the progressbar text
 
+        # file overwrite variables
         self.overwrite_all = False
         self.show_overwrite_all_dialogue = True
 
         self.build_window()
 
-    def check_params(self, src_path, dst_path):
-        """checks that the source and destination paths are valid and returns them if they are."""
-        error_messages = {
-            "empty": ("Error", "You must enter both source and destination paths."),
-            "not_absolute": ("Error", "Source and destination paths must be absolute."),
-            "same_path": (
-                "Error",
-                "Source and destination folders cannot be the same.",
-            ),
-            "src_not_exist": ("Error", "The source path does not exist."),
-            "different_folder": (
-                "Select a different folder.",
-                "Please select a different destination folder.",
-            ),
-            "dst_in_src": (
-                "Error",
-                "Destination folder cannot be inside source folder.",
-            ),
-        }
-
-        src_basename = src_path.name
-
-        if str(src_path) == "." or str(dst_path) == ".":
-            title, message = error_messages["empty"]
-        elif not src_path.is_absolute() or not dst_path.is_absolute():
-            title, message = error_messages["not_absolute"]
-        elif not src_path.exists():
-            title, message = error_messages["src_not_exist"]
-        elif src_path == dst_path:
-            title, message = error_messages["same_path"]
-
-        elif dst_path.is_relative_to(src_path):
-            title, message = error_messages["dst_in_src"]
-
-        elif (dst_path / src_basename).is_dir():
-            use_folder = CTkMessagebox(
-                title="Destination folder already exists",
-                message=f"Destination already contains folder '{src_basename}' inside it."
-                "\nWould you like to use it anyway?",
-                icon="question",
-                option_1="Yes",
-                option_2="No",
-            )
-            if use_folder.get() == "Yes":
-                return True
-            else:
-                title, message = error_messages["different_folder"]
-                print("Invalid parameters. No changes have been made.")
-                return False
-
-        else:
-            return True
-
-        CTkMessagebox(
-            title=title,
-            message=message,
-            icon="cancel",
-            sound=True,
-        )
-        print("Invalid parameters. No changes have been made.")
-        return False
-
-    def browse(self, path_field, field_num):
-        """opens a file selection window and inserts the selected path into the corresponding entry field."""
-        path = ctk.filedialog.askdirectory(
-            mustexist=True,
-            title=f"Select {"Source" if field_num == 0 else "Destination"} Folder",
-        )
-        path_field[field_num].delete(0, ctk.END)
-        path_field[field_num].insert(0, path)
 
     def build_window(self):
         """builds the window and its widgets."""
+        self.__make_widgets__()
+        self.__position_widgets__()
+
+    def __make_widgets__(self):
+        """define the widgets for the GUI."""
         self.header = ctk.CTkLabel(
-            self.root, text="─── WebP Crawler ───", font=("Helvetica", 20, "bold")
+            self.root, text="──── WebP Crawler ────", font=("Helvetica", 20, "bold")
         )
         self.box1_text = ctk.CTkLabel(
             self.root, text="Source folder:", font=self.font
@@ -147,24 +71,24 @@ class Gui:
         self.convert_button = ctk.CTkButton(
             self.root,
             text="Convert",
-            font=self.font,
+            font=("SegoeUI", 14, "bold"),
             fg_color=("light_green", "green"),
             hover_color=("light_red", "red"),
             command=self.start_conversion_thread,
         )
-        self.box3_text = ctk.CTkLabel(
+        self.quality_text = ctk.CTkLabel(
             self.root, text="Quality:", font=self.font
             )
         self.quality_dropdown = ctk.CTkComboBox(
             self.root,
             state="readonly",
-            width=100,
+            width=90,
             values=["Lossless", *[str(i) for i in range(95, -1, -1)]],
             font=self.font,
         )
         self.quality_dropdown.set("Lossless")
 
-        self.box4_text = ctk.CTkLabel(
+        self.format_text = ctk.CTkLabel(
             self.root, text="Format:", font=self.font
             )
         self.format_dropdown = ctk.CTkComboBox(
@@ -174,7 +98,7 @@ class Gui:
             values=[
                 "WebP",
                 "PNG",
-            ],  # jpeg does not support transparency, so we do not support it.
+            ],  # jpeg does not support transparency, so we do not support it🙄.
             font=self.font,
         )
         self.format_dropdown.set("WebP")
@@ -190,43 +114,49 @@ class Gui:
             mode="determinate",
         )
 
+        for i in range(2):
+            path_field = ctk.CTkEntry(self.root, width=250)
+            browse_button = ctk.CTkButton(
+                self.root,
+                text="Browse...",
+                command=lambda field_num=i: self.__browse__(self.fields, field_num),
+            )
+            self.fields.append(path_field)
+            self.browse_buttons.append(browse_button)
+        
+    def __position_widgets__(self):
+        """positions the UI elements inside the GUI."""
         self.header.grid(row=0, column=2, pady=(10, 0))
         self.box1_text.grid(row=3, column=1, sticky="w", padx=(10, 0))
         self.box2_text.grid(row=4, column=1, sticky="w", padx=(10, 0))
-        self.box3_text.grid(row=5, column=1, sticky="w", padx=(10, 0), pady=(5, 0))
+        self.quality_text.grid(row=5, column=1, sticky="w", padx=(10, 0), pady=(5, 0))
         self.quality_dropdown.grid(
             row=5, column=1, sticky="w", padx=(60, 0), pady=(10, 0)
         )
 
         self.include_subfolders_checkbox.grid(row=5, column=2, pady=(10, 0))
 
-        self.box4_text.grid(row=5, column=3, sticky="w", pady=(15, 0))
+        self.format_text.grid(row=5, column=3, sticky="w", pady=(15, 0))
         self.format_dropdown.grid(
-            row=5, column=3, sticky="w", padx=(45, 0), pady=(10, 0)
+            row=5, column=3, sticky="w", padx=(50, 0), pady=(10, 0)
         )
         self.convert_button.grid(row=6, column=2)
         self.progressbar_text.grid(row=7, column=2)
         self.progressbar.grid(row=8, column=2)
 
-        self.fields = []
         for i in range(2):
-            path_field = ctk.CTkEntry(self.root, width=250)
-            path_field.grid(row=i + 3, column=2, pady=(5, 0))
-            browse_button = ctk.CTkButton(
-                self.root,
-                text="Browse...",
-                command=lambda field_num=i: self.browse(self.fields, field_num),
-            )
-            browse_button.grid(row=i + 3, column=3, padx=(5, 0), pady=(5, 0))
-            self.fields.append(path_field)
+            self.fields[i].grid(row=i + 3, column=2, pady=(5, 0))
+            self.browse_buttons[i].grid(row=i + 3, column=3, padx=(5, 0), pady=(5, 0))
 
-    def start_conversion_thread(self):
-        """starts the conversion process in a separate thread to prevent the GUI from freezing."""
-        conversion_thread = threading.Thread(
-            target=lambda: Converter().convert(self),
-            daemon=True,
+
+    def __browse__(self, path_field, field_num):
+        """opens a file selection window and inserts the selected path into the corresponding entry field."""
+        path = ctk.filedialog.askdirectory(
+            mustexist=True,
+            title=f"Select {"Source" if field_num == 0 else "Destination"} Folder",
         )
-        conversion_thread.start()
+        path_field[field_num].delete(0, ctk.END)
+        path_field[field_num].insert(0, path)
 
     def update_progressbar(
         self,
@@ -257,6 +187,7 @@ class Gui:
                 sound=True,
             )
             return False
+
         elif num_of_failed_conversions > 0:
             copy_non_images = CTkMessagebox(
                 title="Copy non-images?",
@@ -273,12 +204,12 @@ class Gui:
                 return False
 
         else:
-            message_content = f"{num_of_converted_files} files were successfully converted!"
+            message = f"{num_of_converted_files} files were successfully converted!"
             if num_of_already_formatted_images > 0:
-                message_content += f"\nCopied {num_of_already_formatted_images} {self.format_dropdown.get().upper()} files!"
+                message += f"\nCopied {num_of_already_formatted_images} {self.format_dropdown.get().upper()} files!"
             CTkMessagebox(
                 title="Conversion complete!",
-                message=message_content,
+                message=message,
                 icon="check",
                 option_1="Ok",
             )
@@ -300,12 +231,49 @@ class Gui:
             return False
 
     # file overwrite dialogues
-    def confirm_overwrite_file(self, file_name, selected_format):
+    def show_overwrite_dialogues(self, new_dst_path, are_you_sure, selected_format):
+        """checks if file already exists and prompts user to overwrite or skip."""
+        new_dst_path = Path(new_dst_path)
+        if (new_dst_path.with_suffix("." + selected_format)).is_file():
+            if self.overwrite_all:
+                return True
+            else:
+                overwrite_file = self.__open_overwrite_dialogue_box__(
+                    title="File already exists",
+                    message=f'File "{new_dst_path.stem}.{selected_format}" already exists in the destination folder.'
+                    '\nWould you like to overwrite it?',
+                    icon="warning",
+                )
+
+                if not overwrite_file:
+                    return False
+
+                while self.show_overwrite_all_dialogue and not are_you_sure:
+                    self.overwrite_all = self.__open_overwrite_dialogue_box__(
+                        title="Overwrite all?",
+                        message="Would you like to overwrite all files that already exist in the destination folder?",
+                        icon="question",
+                    )
+
+                    if self.overwrite_all:
+                        are_you_sure = self.__open_overwrite_dialogue_box__(
+                            title="Are you sure?",
+                            message="Are you sure you want to overwrite all files that already exist in the destination folder?"
+                            "\nThis action cannot be undone.",
+                            icon="warning",
+                        )
+                        self.overwrite_all = are_you_sure
+
+                    else:
+                        self.overwrite_all = False
+                        self.show_overwrite_all_dialogue = False
+        return True  # file is to be overwritten
+    
+    def __open_overwrite_dialogue_box__(self, title, message, icon):
         overwrite = CTkMessagebox(
-            title="File already exists",
-            message=f'File "{file_name}.{selected_format}" already exists in the destination folder.'
-            '\nWould you like to overwrite it?',
-            icon="warning",
+            title=title,
+            message=message,
+            icon=icon,
             option_1="Yes",
             option_2="No",
         )
@@ -314,61 +282,13 @@ class Gui:
         else:
             return False
 
-    def confirm_overwrite_all(self):
-        overwrite_all = CTkMessagebox(
-            title="Overwrite all?",
-            message="Would you like to overwrite all files that already exist in the destination folder?",
-            icon="question",
-            option_1="Yes",
-            option_2="No",
+
+
+    def start_conversion_thread(self): #TODO: this should be in converter.py
+        """starts the conversion process in a separate thread to prevent the GUI from freezing."""
+        conversion_thread = threading.Thread(
+            target=lambda: Converter().convert(self),
+            daemon=True,
         )
-        if overwrite_all.get() == "Yes":
-            return True
-        else:
-            return False
+        conversion_thread.start()
 
-    def confirm_are_you_sure(self):
-        are_you_sure = CTkMessagebox(
-            title="Are you sure?",
-            message="Are you sure you want to overwrite all files that already exist in the destination folder?"
-            "\nThis action cannot be undone.",
-            icon="warning",
-            option_1="Yes",
-            option_2="No",
-            sound=True,
-        )
-        if are_you_sure.get() == "Yes":
-            return True
-        else:
-            return False
-
-    def show_overwrite_dialogues(self, new_dst_path, are_you_sure, selected_format):
-        """checks if file already exists and prompts user to overwrite or skip."""
-        new_dst_path = Path(new_dst_path)
-        if (new_dst_path.with_suffix("." + selected_format)).is_file():
-            if self.overwrite_all:
-                return True
-            else:
-                overwrite_file = self.confirm_overwrite_file(
-                    new_dst_path.stem, selected_format
-                )
-
-                if not overwrite_file:
-                    return False
-
-                while self.show_overwrite_all_dialogue and not are_you_sure:
-                    self.overwrite_all = self.confirm_overwrite_all()
-
-                    if self.overwrite_all:
-                        are_you_sure = self.confirm_are_you_sure()
-                        self.overwrite_all = are_you_sure
-
-                    else:
-                        self.overwrite_all = False
-                        self.show_overwrite_all_dialogue = False
-        return True  # file is to be overwritten
-
-
-if __name__ == "__main__":
-    gui = Gui()
-    gui.root.mainloop()
