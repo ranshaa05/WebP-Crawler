@@ -9,6 +9,7 @@ def create_folder_tree(src_path: Path, dst_path: Path):
 
     if not dst_path.exists():
         dst_path.mkdir(parents=True, exist_ok=True)
+    (dst_path / src_path.name).mkdir(parents=True, exist_ok=True)
 
     for item in src_path.rglob("*"):
         if item.is_dir():
@@ -19,7 +20,7 @@ def make_destination_folders(src_path, dst_path, include_subfolders):
     if include_subfolders:
         create_folder_tree(src_path, dst_path)
     else:
-        dst_path.mkdir(parents=True, exist_ok=True)
+        (dst_path / src_path.name).mkdir(parents=True, exist_ok=True)
 
 def detect_images(src_path, include_subfolders, f_ext):
     image_files = []
