@@ -1,3 +1,4 @@
+import threading
 from pathlib import Path
 from shutil import copy2
 
@@ -5,11 +6,18 @@ from CTkMessagebox import CTkMessagebox
 from PIL import Image, UnidentifiedImageError
 
 import filesystem_utils
-
 import path_validator
 
 # Max resolution for each format, based on file format specs.
 MAX_RESOLUTION = {"webp": (16383, 16383), "png": (65535, 65535)}
+
+def start_conversion_thread(gui):
+    """starts the conversion process in a separate thread to prevent the GUI from freezing."""
+    conversion_thread = threading.Thread(
+        target=lambda: Converter().convert(gui),
+        daemon=True,
+    )
+    conversion_thread.start()
 
 
 class Converter:
@@ -205,14 +213,12 @@ class Converter:
     def __request_stop_conversion__(self):
         self.stop_conversion = True
 
-    def __reset_convert_button__(self, gui):
+    def __reset_convert_button__(self, gui): #TODO: move to gui.py
         gui.convert_button.configure(
             state="normal",
             text="Convert",
             fg_color=("light green", "green"),
             hover_color=("light red", "red"),
-            command=gui.start_conversion_thread,
+            command=lambda: start_conversion_thread(gui),
         )
         self.stop_conversion = False
-
-    

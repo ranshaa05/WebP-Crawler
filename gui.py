@@ -1,11 +1,10 @@
-import threading
 from pathlib import Path
 from tkinter import BooleanVar, DoubleVar, StringVar
 
 import customtkinter as ctk
 from CTkMessagebox import CTkMessagebox
 
-from converter import Converter
+import converter
 
 
 class Gui:
@@ -74,7 +73,7 @@ class Gui:
             font=("SegoeUI", 14, "bold"),
             fg_color=("light_green", "green"),
             hover_color=("light_red", "red"),
-            command=self.start_conversion_thread,
+            command=lambda: converter.start_conversion_thread(self),
         )
         self.quality_text = ctk.CTkLabel(
             self.root, text="Quality:", font=self.font
@@ -281,14 +280,3 @@ class Gui:
             return True
         else:
             return False
-
-
-
-    def start_conversion_thread(self): #TODO: this should be in converter.py
-        """starts the conversion process in a separate thread to prevent the GUI from freezing."""
-        conversion_thread = threading.Thread(
-            target=lambda: Converter().convert(self),
-            daemon=True,
-        )
-        conversion_thread.start()
-
