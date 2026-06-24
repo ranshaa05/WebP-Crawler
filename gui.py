@@ -147,7 +147,6 @@ class Gui:
             self.fields[i].grid(row=i + 3, column=2, pady=(5, 0))
             self.browse_buttons[i].grid(row=i + 3, column=3, padx=(5, 0), pady=(5, 0))
 
-
     def __browse__(self, path_field, field_num):
         """opens a file selection window and inserts the selected path into the corresponding entry field."""
         path = ctk.filedialog.askdirectory(
@@ -173,6 +172,35 @@ class Gui:
         progress_percentage = num_of_processed_files / file_list_length * 100
         self.progress.set(f"{int(progress_percentage)}%")
         self.progressbar_percentage.set(progress_percentage / 100)
+    
+    def update_convert_button(self, converter_instance, text):
+        """updates the convert button."""
+        if text == "stop":
+            self.convert_button.configure(
+            state = "normal",
+            text = text.capitalize(),
+            fg_color = ("light red", "red"),
+            hover_color = ("dark red"),
+            command = lambda: converter_instance.request_stop_conversion()
+            )
+
+        elif text == "stopping":
+            self.convert_button.configure(
+            state = "disabled",
+            text = text.capitalize(),
+            fg_color = ("light red", "red"),
+            hover_color = ("dark red"),
+            command = lambda: None
+            )
+        
+        elif text == "convert":
+            self.convert_button.configure(
+            state = "normal",
+            text = text.capitalize(),
+            fg_color = ("light green", "green"),
+            hover_color = ("light red", "red"),
+            command = lambda: converter.start_conversion_thread(self)
+            )
 
     def post_conversion_dialogue(
         self, num_of_converted_files, num_of_failed_conversions, num_of_already_formatted_images

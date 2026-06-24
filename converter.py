@@ -14,31 +14,27 @@ MAX_RESOLUTION = {"webp": (16383, 16383), "png": (65535, 65535)}
 def start_conversion_thread(gui):
     """starts the conversion process in a separate thread to prevent the GUI from freezing."""
     conversion_thread = threading.Thread(
-        target=lambda: Converter().convert(gui),
+        target=lambda: Converter(gui).convert(),
         daemon=True,
     )
     conversion_thread.start()
 
 
 class Converter: #TODO: find a better name so it doesn't conflict with the module name.
-    def __init__(self):
+    def __init__(self, gui):
+        self.gui=gui
         self.src_path = None
         self.dst_path = None
         self.quality = None
         self.include_subfolders = None
         self.selected_format = None
+
         self.stop_conversion = False
         self.downscale_all = False
         self.disable_bomb_check_all = False
     
-    def __pre_conversion_setup__(self, gui):
-        gui.convert_button.configure(
-            text="Stop",
-            fg_color=("light red", "red"),
-            hover_color=("dark red"),
-            command=lambda: self.__request_stop_conversion__(gui),
-        )
-
+    def __pre_conversion_setup__(self):
+        self.gui.update_convert_button(self, "stop")
         filesystem_utils.make_destination_folders(self.src_path, self.dst_path, self.include_subfolders)
 
         image_list, non_image_list, already_formatted_images = filesystem_utils.detect_images(self.src_path, self.include_subfolders, self.selected_format)
@@ -49,21 +45,21 @@ class Converter: #TODO: find a better name so it doesn't conflict with the modul
         )
     
 
-    def convert(self, gui):
+    def convert(self):
         """Convert images in the source path to the selected format and save them in the destination path."""
-        self.__update_ui_params__(gui)
+        self.__update_ui_params__()
         if not path_validator.check_paths(self.src_path, self.dst_path):
-            self.__reset_convert_button__(gui)
+            self.__reset_convert_button__()
             return # TODO: all of this pre-conversion stuff shouldnt be running in multithreading
         (
             image_list,
             non_image_list,
             already_formatted_images
-        ) = self.__pre_conversion_setup__(gui)
+        ) = self.__pre_conversion_setup__()
         
 
         self.dst_path = self.dst_path / self.src_path.name
-        reencode_images = gui.reencode_images_of_same_format_dialogue(self.selected_format, len(already_formatted_images)) if already_formatted_images else False
+        reencode_images = self.gui.reencode_images_of_same_format_dialogue(self.selected_format, len(already_formatted_images)) if already_formatted_images else False
         image_list = image_list if reencode_images else [img for img in image_list if img not in already_formatted_images]
         image_list_length = len(image_list)
 
@@ -95,7 +91,7 @@ class Converter: #TODO: find a better name so it doesn't conflict with the modul
                     )
                     if response.get() == "No" or response is None:
                         num_of_skipped_files += 1
-                        gui.update_progressbar(
+                        self.gui.update_progressbar(
                             num_of_converted_files,
                             num_of_failed_conversions,
                             num_of_skipped_files,
@@ -131,7 +127,7 @@ class Converter: #TODO: find a better name so it doesn't conflict with the modul
                         if response.get() == "Skip" or response is None:
                             num_of_skipped_files += 1
                             image.close()
-                            gui.update_progressbar(
+                            self.gui.update_progressbar(
                                 num_of_converted_files,
                                 num_of_failed_conversions,
                                 num_of_skipped_files,
@@ -149,12 +145,12 @@ class Converter: #TODO: find a better name so it doesn't conflict with the modul
                     image.thumbnail((max_width, max_height)) # resizes the image
                     Image.MAX_IMAGE_PIXELS = original_max
                     
-                if not gui.show_overwrite_dialogues(
+                if not self.gui.show_overwrite_dialogues(
                     full_dst_path, are_you_sure, self.selected_format
                 ):
                     num_of_skipped_files += 1
                     image.close()
-                    gui.update_progressbar(  # TODO:this fails on repeated conversions. might be because it's not running in the gui (main) thread.
+                    self.gui.update_progressbar(  # TODO:this fails on repeated conversions. might be because it's not running in the gui thread.
                         num_of_converted_files,
                         num_of_failed_conversions,
                         num_of_skipped_files,
@@ -172,13 +168,13 @@ class Converter: #TODO: find a better name so it doesn't conflict with the modul
                 image.close()
                 image = None
 
-            gui.update_progressbar(
+            self.gui.update_progressbar(
                 num_of_converted_files,
                 num_of_failed_conversions,
                 num_of_skipped_files,
                 image_list_length,
             )
-        if gui.post_conversion_dialogue(
+        if self.gui.post_conversion_dialogue(
             num_of_converted_files, len(non_image_list), len(already_formatted_images) if not reencode_images else 0
         ):
             for file in non_image_list:  # TODO: this doesnt work for folders
@@ -194,38 +190,26 @@ class Converter: #TODO: find a better name so it doesn't conflict with the modul
                     self.dst_path / file.relative_to(self.src_path),
                 )
         # Reset progress bar
-        gui.progress.set("0%")
-        gui.progressbar_percentage.set("0")
-        gui.overwrite_all = False
+        self.gui.progress.set("0%")
+        self.gui.progressbar_percentage.set("0")
+        self.gui.overwrite_all = False
         self.skip_all = False
         self.disable_bomb_check_all = False
-        gui.show_overwrite_all_dialogue = True
+        self.gui.show_overwrite_all_dialogue = True
 
-        self.__reset_convert_button__(gui)
+        self.__reset_convert_button__()
 
-    def __update_ui_params__(self, gui):
-        self.src_path = Path(gui.fields[0].get().strip())
-        self.dst_path = Path(gui.fields[1].get().strip())
-        self.quality = gui.quality_dropdown.get()
-        self.include_subfolders = gui.include_subfolders.get()
-        self.selected_format = gui.format_dropdown.get().lower()
+    def __update_ui_params__(self):
+        self.src_path = Path(self.gui.fields[0].get().strip())
+        self.dst_path = Path(self.gui.fields[1].get().strip())
+        self.quality = self.gui.quality_dropdown.get()
+        self.include_subfolders = self.gui.include_subfolders.get()
+        self.selected_format = self.gui.format_dropdown.get().lower()
 
-    def __request_stop_conversion__(self, gui):
+    def request_stop_conversion(self):
         self.stop_conversion = True
-        gui.convert_button.configure( #TODO: move to gui.py
-        state="disabled",
-        text="Stopping...",
-        fg_color=("light red", "red"),
-        hover_color=("dark red"),
-        command=lambda: start_conversion_thread(gui)
-        )
+        self.gui.update_convert_button(self, "stopping")
 
-    def __reset_convert_button__(self, gui): #TODO: move to gui.py
-        gui.convert_button.configure(
-            state="normal",
-            text="Convert",
-            fg_color=("light green", "green"),
-            hover_color=("light red", "red"),
-            command=lambda: start_conversion_thread(gui),
-        )
+    def __reset_convert_button__(self): #TODO: move to gui.py
+        self.gui.update_convert_button(self, "convert")
         self.stop_conversion = False
