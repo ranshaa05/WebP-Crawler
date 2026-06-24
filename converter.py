@@ -20,30 +20,23 @@ def start_conversion_thread(gui):
     conversion_thread.start()
 
 
-class Converter:
+class Converter: #TODO: find a better name so it doesn't conflict with the module name.
     def __init__(self):
-        self.stop_conversion = False
-        self.downscale_all = False
-        self.disable_bomb_check_all = False
         self.src_path = None
         self.dst_path = None
         self.quality = None
         self.include_subfolders = None
         self.selected_format = None
-
-    def __update_ui_params__(self, gui):
-        self.src_path = Path(gui.fields[0].get().strip())
-        self.dst_path = Path(gui.fields[1].get().strip())
-        self.quality = gui.quality_dropdown.get()
-        self.include_subfolders = gui.include_subfolders.get()
-        self.selected_format = gui.format_dropdown.get().lower()
+        self.stop_conversion = False
+        self.downscale_all = False
+        self.disable_bomb_check_all = False
     
     def __pre_conversion_setup__(self, gui):
         gui.convert_button.configure(
             text="Stop",
             fg_color=("light red", "red"),
             hover_color=("dark red"),
-            command=lambda: self.__request_stop_conversion__(),
+            command=lambda: self.__request_stop_conversion__(gui),
         )
 
         filesystem_utils.make_destination_folders(self.src_path, self.dst_path, self.include_subfolders)
@@ -210,8 +203,22 @@ class Converter:
 
         self.__reset_convert_button__(gui)
 
-    def __request_stop_conversion__(self):
+    def __update_ui_params__(self, gui):
+        self.src_path = Path(gui.fields[0].get().strip())
+        self.dst_path = Path(gui.fields[1].get().strip())
+        self.quality = gui.quality_dropdown.get()
+        self.include_subfolders = gui.include_subfolders.get()
+        self.selected_format = gui.format_dropdown.get().lower()
+
+    def __request_stop_conversion__(self, gui):
         self.stop_conversion = True
+        gui.convert_button.configure( #TODO: move to gui.py
+        state="disabled",
+        text="Stopping...",
+        fg_color=("light red", "red"),
+        hover_color=("dark red"),
+        command=lambda: start_conversion_thread(gui)
+        )
 
     def __reset_convert_button__(self, gui): #TODO: move to gui.py
         gui.convert_button.configure(
