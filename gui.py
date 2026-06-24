@@ -24,6 +24,7 @@ class Gui:
         )
         self.root.resizable(False, False)
         self.font = ("SegoeUI", 14)
+        self.convert_button_font = ("SegoeUI", 14, "bold")
 
         # ui element variables
         self.fields = []
@@ -70,7 +71,7 @@ class Gui:
         self.convert_button = ctk.CTkButton(
             self.root,
             text="Convert",
-            font=("SegoeUI", 14, "bold"),
+            font=self.convert_button_font,
             fg_color=("light_green", "green"),
             hover_color=("light_red", "red"),
             command=lambda: converter.start_conversion_thread(self),
@@ -179,6 +180,7 @@ class Gui:
             self.convert_button.configure(
             state = "normal",
             text = text.capitalize(),
+            font=self.convert_button_font,
             fg_color = ("light red", "red"),
             hover_color = ("dark red"),
             command = lambda: converter_instance.request_stop_conversion()
@@ -188,6 +190,7 @@ class Gui:
             self.convert_button.configure(
             state = "disabled",
             text = text.capitalize(),
+            font=self.convert_button_font,
             fg_color = ("light red", "red"),
             hover_color = ("dark red"),
             command = lambda: None
@@ -197,6 +200,7 @@ class Gui:
             self.convert_button.configure(
             state = "normal",
             text = text.capitalize(),
+            font=self.convert_button_font,
             fg_color = ("light green", "green"),
             hover_color = ("light red", "red"),
             command = lambda: converter.start_conversion_thread(self)
