@@ -3,6 +3,7 @@ from pathlib import Path
 
 from gui import Gui
 
+
 def get_resource_path(relative_path):
     """Get the absolute path to a resource in a way that works for development and for PyInstaller/Nuitka bundles."""
     try:
@@ -17,4 +18,4 @@ def get_resource_path(relative_path):
 if __name__ == "__main__":
     icon_path = get_resource_path("icon.ico")
     gui = Gui(icon_path)
-    gui.root.mainloop()
+    gui.root.mainloop()    gui.root.mainloop()

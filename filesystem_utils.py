@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from PIL import Image
 
 # Supported image formats
@@ -41,4 +42,4 @@ def detect_images(src_path, include_subfolders, f_ext):
         else:
             non_image_files.append(file)
 
-    return image_files, non_image_files, already_formatted_images
+    return image_files, non_image_files, already_formatted_images    return image_files, non_image_files, already_formatted_images
