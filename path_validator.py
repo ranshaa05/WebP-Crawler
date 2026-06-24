@@ -61,4 +61,4 @@ def check_paths(src_path, dst_path):
             sound=True,
         )
         print("Invalid parameters. No changes have been made.")
-        return False        return False
+        return False
