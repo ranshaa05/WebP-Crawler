@@ -1,2 +1,5 @@
 
 *.pyc
+icon.webp
+.vscode/settings.json
+.vscode/launch.json
