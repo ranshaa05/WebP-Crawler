@@ -4,7 +4,7 @@ from pathlib import Path
 from gui import Gui
 
 
-def get_resource_path(relative_path):
+def get_resource_path(*relative_paths):
     """Get the absolute path to a resource in a way that works for development and for PyInstaller/Nuitka bundles."""
     try:
         # PyInstaller/Nuitka creates a temp folder and stores path in _MEIPASS
@@ -12,7 +12,7 @@ def get_resource_path(relative_path):
     except Exception:
         base_path = Path(__file__).parent
 
-    return Path(base_path) / relative_path
+    return [Path(base_path) / path for path in relative_paths]
 
 
 if __name__ == "__main__":
