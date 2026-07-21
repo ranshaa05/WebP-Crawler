@@ -8,20 +8,18 @@ import converter
 
 
 class Gui:
-    def __init__(self, icon_path,root=None):
+    def __init__(self, icon_path, root=None):
         if not root:
             self.root = ctk.CTk()
         else:
             self.root = root
-        
+
         self.root.iconbitmap(str(icon_path))
         self.root.title("WebP Crawler")
         screen_width, screen_height = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
         min_window_size = "615x225"
         window_size = f"{int(screen_width * 0.32)}x{int(screen_height * 0.21)}"
-        self.root.geometry(
-            window_size if window_size >= min_window_size else min_window_size
-        )
+        self.root.geometry(window_size if window_size >= min_window_size else min_window_size)
         self.root.resizable(False, False)
         self.font = ("SegoeUI", 14)
         self.convert_button_font = ("SegoeUI", 14, "bold")
@@ -41,16 +39,13 @@ class Gui:
 
         self.progress = StringVar()
         self.progress.set("0%")
-        self.progressbar_percentage = (
-            DoubleVar()
-        )  # hacky way to include the "%" sign in the progressbar text
+        self.progressbar_percentage = DoubleVar()  # hacky way to include the "%" sign in the progressbar text
 
         # file overwrite variables
         self.overwrite_all = False
         self.show_overwrite_all_dialogue = True
 
         self.build_window()
-
 
     def build_window(self):
         """builds the window and its widgets."""
@@ -59,15 +54,9 @@ class Gui:
 
     def __make_widgets__(self):
         """define the widgets for the GUI."""
-        self.header = ctk.CTkLabel(
-            self.root, text="──── WebP Crawler ────", font=("Helvetica", 20, "bold")
-        )
-        self.box1_text = ctk.CTkLabel(
-            self.root, text="Source folder:", font=self.font
-            )
-        self.box2_text = ctk.CTkLabel(
-            self.root, text="Destination folder:", font=self.font
-        )
+        self.header = ctk.CTkLabel(self.root, text="──── WebP Crawler ────", font=("Helvetica", 20, "bold"))
+        self.box1_text = ctk.CTkLabel(self.root, text="Source folder:", font=self.font)
+        self.box2_text = ctk.CTkLabel(self.root, text="Destination folder:", font=self.font)
         self.convert_button = ctk.CTkButton(
             self.root,
             text="Convert",
@@ -76,9 +65,7 @@ class Gui:
             hover_color=("light_red", "red"),
             command=lambda: converter.start_conversion_thread(self),
         )
-        self.quality_text = ctk.CTkLabel(
-            self.root, text="Quality:", font=self.font
-            )
+        self.quality_text = ctk.CTkLabel(self.root, text="Quality:", font=self.font)
         self.quality_dropdown = ctk.CTkComboBox(
             self.root,
             state="readonly",
@@ -88,9 +75,7 @@ class Gui:
         )
         self.quality_dropdown.set("Lossless")
 
-        self.format_text = ctk.CTkLabel(
-            self.root, text="Format:", font=self.font
-            )
+        self.format_text = ctk.CTkLabel(self.root, text="Format:", font=self.font)
         self.format_dropdown = ctk.CTkComboBox(
             self.root,
             state="readonly",
@@ -103,9 +88,7 @@ class Gui:
         )
         self.format_dropdown.set("WebP")
 
-        self.progressbar_text = ctk.CTkLabel(
-            self.root, textvariable=self.progress, font=self.font
-        )
+        self.progressbar_text = ctk.CTkLabel(self.root, textvariable=self.progress, font=self.font)
 
         self.progressbar = ctk.CTkProgressBar(
             self.root,
@@ -123,23 +106,19 @@ class Gui:
             )
             self.fields.append(path_field)
             self.browse_buttons.append(browse_button)
-        
+
     def __position_widgets__(self):
         """positions the UI elements inside the GUI."""
         self.header.grid(row=0, column=2, pady=(10, 0))
         self.box1_text.grid(row=3, column=1, sticky="w", padx=(10, 0))
         self.box2_text.grid(row=4, column=1, sticky="w", padx=(10, 0))
         self.quality_text.grid(row=5, column=1, sticky="w", padx=(10, 0), pady=(5, 0))
-        self.quality_dropdown.grid(
-            row=5, column=1, sticky="w", padx=(60, 0), pady=(10, 0)
-        )
+        self.quality_dropdown.grid(row=5, column=1, sticky="w", padx=(60, 0), pady=(10, 0))
 
         self.include_subfolders_checkbox.grid(row=5, column=2, pady=(10, 0))
 
         self.format_text.grid(row=5, column=3, sticky="w", pady=(15, 0))
-        self.format_dropdown.grid(
-            row=5, column=3, sticky="w", padx=(50, 0), pady=(10, 0)
-        )
+        self.format_dropdown.grid(row=5, column=3, sticky="w", padx=(50, 0), pady=(10, 0))
         self.convert_button.grid(row=6, column=2)
         self.progressbar_text.grid(row=7, column=2)
         self.progressbar.grid(row=8, column=2)
@@ -152,7 +131,7 @@ class Gui:
         """opens a file selection window and inserts the selected path into the corresponding entry field."""
         path = ctk.filedialog.askdirectory(
             mustexist=True,
-            title=f"Select {"Source" if field_num == 0 else "Destination"} Folder",
+            title=f"Select {'Source' if field_num == 0 else 'Destination'} Folder",
         )
         path_field[field_num].delete(0, ctk.END)
         path_field[field_num].insert(0, path)
@@ -165,50 +144,23 @@ class Gui:
         file_list_length,
     ):
         """updates the progress bar and its text."""
-        num_of_processed_files = (
-            num_of_image_files
-            + num_of_failed_conversions
-            + num_of_skipped_files
-        )
+        num_of_processed_files = num_of_image_files + num_of_failed_conversions + num_of_skipped_files
         progress_percentage = num_of_processed_files / file_list_length * 100
         self.progress.set(f"{int(progress_percentage)}%")
         self.progressbar_percentage.set(progress_percentage / 100)
-    
+
     def update_convert_button(self, converter_instance, text):
         """updates the convert button."""
         if text == "stop":
-            self.convert_button.configure(
-            state = "normal",
-            text = text.capitalize(),
-            font=self.convert_button_font,
-            fg_color = ("light red", "red"),
-            hover_color = ("dark red"),
-            command = lambda: converter_instance.request_stop_conversion()
-            )
+            self.convert_button.configure(state="normal", text=text.capitalize(), font=self.convert_button_font, fg_color=("light red", "red"), hover_color=("dark red"), command=lambda: converter_instance.request_stop_conversion())
 
         elif text == "stopping":
-            self.convert_button.configure(
-            state = "disabled",
-            text = text.capitalize(),
-            font=self.convert_button_font,
-            fg_color = ("light red", "red"),
-            hover_color = ("dark red"),
-            command = lambda: None
-            )
-        
-        elif text == "convert":
-            self.convert_button.configure(
-            state = "normal",
-            text = text.capitalize(),
-            font=self.convert_button_font,
-            fg_color = ("light green", "green"),
-            hover_color = ("light red", "red"),
-            command = lambda: converter.start_conversion_thread(self)
-            )
+            self.convert_button.configure(state="disabled", text=text.capitalize(), font=self.convert_button_font, fg_color=("light red", "red"), hover_color=("dark red"), command=lambda: None)
 
-    def post_conversion_dialogue(
-        self, num_of_converted_files, num_of_failed_conversions, num_of_already_formatted_images
-    ):
+        elif text == "convert":
+            self.convert_button.configure(state="normal", text=text.capitalize(), font=self.convert_button_font, fg_color=("light green", "green"), hover_color=("light red", "red"), command=lambda: converter.start_conversion_thread(self))
+
+    def post_conversion_dialogue(self, num_of_converted_files, num_of_failed_conversions, num_of_already_formatted_images):
         """displays the corresponding dialogue after conversion."""
         if num_of_converted_files == 0:
             CTkMessagebox(
@@ -222,9 +174,7 @@ class Gui:
         elif num_of_failed_conversions > 0:
             copy_non_images = CTkMessagebox(
                 title="Copy non-images?",
-                message=f"{num_of_converted_files} files were successfully converted."
-                "\nFound {num_of_failed_conversions} non-image files."
-                "\nWould you like to copy them to the destination?",
+                message=f"{num_of_converted_files} files were successfully converted.\nFound {{num_of_failed_conversions}} non-image files.\nWould you like to copy them to the destination?",
                 icon="question",
                 option_1="Yes",
                 option_2="No",
@@ -245,7 +195,7 @@ class Gui:
                 option_1="Ok",
             )
             return False
-        
+
     def reencode_images_of_same_format_dialogue(self, selected_format, num_of_already_formatted_images):
         if num_of_already_formatted_images == 0:
             return False
@@ -271,8 +221,7 @@ class Gui:
             else:
                 overwrite_file = self.__open_overwrite_dialogue_box__(
                     title="File already exists",
-                    message=f'File "{new_dst_path.stem}.{selected_format}" already exists in the destination folder.'
-                    '\nWould you like to overwrite it?',
+                    message=f'File "{new_dst_path.stem}.{selected_format}" already exists in the destination folder.\nWould you like to overwrite it?',
                     icon="warning",
                 )
 
@@ -289,8 +238,7 @@ class Gui:
                     if self.overwrite_all:
                         are_you_sure = self.__open_overwrite_dialogue_box__(
                             title="Are you sure?",
-                            message="Are you sure you want to overwrite all files that already exist in the destination folder?"
-                            "\nThis action cannot be undone.",
+                            message="Are you sure you want to overwrite all files that already exist in the destination folder?\nThis action cannot be undone.",
                             icon="warning",
                         )
                         self.overwrite_all = are_you_sure
@@ -299,7 +247,7 @@ class Gui:
                         self.overwrite_all = False
                         self.show_overwrite_all_dialogue = False
         return True  # file is to be overwritten
-    
+
     def __open_overwrite_dialogue_box__(self, title, message, icon):
         overwrite = CTkMessagebox(
             title=title,

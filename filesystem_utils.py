@@ -5,6 +5,7 @@ from PIL import Image
 # Supported image formats
 REGISTERED_EXTENSIONS = {ext.lower() for ext in Image.registered_extensions()}
 
+
 def create_folder_tree(src_path: Path, dst_path: Path):
     """Copy the source folder tree in the destination path."""
 
@@ -17,11 +18,13 @@ def create_folder_tree(src_path: Path, dst_path: Path):
             destination = dst_path / src_path.name / item.relative_to(src_path)
             destination.mkdir(parents=True, exist_ok=True)
 
+
 def make_destination_folders(src_path, dst_path, include_subfolders):
     if include_subfolders:
         create_folder_tree(src_path, dst_path)
     else:
         (dst_path / src_path.name).mkdir(parents=True, exist_ok=True)
+
 
 def detect_images(src_path, include_subfolders, f_ext):
     image_files = []
