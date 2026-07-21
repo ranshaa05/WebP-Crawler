@@ -1,0 +1,40 @@
+name: Ruff
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+# Requires write permissions for contents so it can push fixes back to the repo
+permissions:
+  contents: write
+  checks: write
+
+jobs:
+  ruff:
+    name: Ruff
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history so commits can be pushed cleanly
+          fetch-depth: 0
+
+      - name: Auto-fix lint errors
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: "check . --fix --ignore E501"
+
+      - name: Auto-format code
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: "format . --line-length 1000"
+
+      - name: Commit and push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "style: auto-fix lint & formatting [ruff]"
+          branch: ${{ github.head_ref || github.ref_name }}
