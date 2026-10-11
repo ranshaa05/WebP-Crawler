@@ -36,9 +36,15 @@ class Converter:  # TODO: find a better name so it doesn't conflict with the mod
 
     def __pre_conversion_setup__(self):
         self.gui.update_convert_button(self, "stop")
-        filesystem_utils.make_destination_folders(self.src_path, self.dst_path, self.include_subfolders)
+        filesystem_utils.make_destination_folders(
+            self.src_path, self.dst_path, self.include_subfolders
+        )
 
-        image_list, non_image_list, already_formatted_images = filesystem_utils.detect_images(self.src_path, self.include_subfolders, self.selected_format)
+        image_list, non_image_list, already_formatted_images = (
+            filesystem_utils.detect_images(
+                self.src_path, self.include_subfolders, self.selected_format
+            )
+        )
         return (image_list, non_image_list, already_formatted_images)
 
     def convert(self):
@@ -47,11 +53,23 @@ class Converter:  # TODO: find a better name so it doesn't conflict with the mod
         if not path_validator.check_paths(self.src_path, self.dst_path):
             self.__reset_convert_button__()
             return  # TODO: all of this pre-conversion stuff shouldnt be running in multithreading
-        (image_list, non_image_list, already_formatted_images) = self.__pre_conversion_setup__()
+        (image_list, non_image_list, already_formatted_images) = (
+            self.__pre_conversion_setup__()
+        )
 
         self.dst_path = self.dst_path / self.src_path.name
-        reencode_images = self.gui.reencode_images_of_same_format_dialogue(self.selected_format, len(already_formatted_images)) if already_formatted_images else False
-        image_list = image_list if reencode_images else [img for img in image_list if img not in already_formatted_images]
+        reencode_images = (
+            self.gui.reencode_images_of_same_format_dialogue(
+                self.selected_format, len(already_formatted_images)
+            )
+            if already_formatted_images
+            else False
+        )
+        image_list = (
+            image_list
+            if reencode_images
+            else [img for img in image_list if img not in already_formatted_images]
+        )
         image_list_length = len(image_list)
 
         num_of_converted_files = 0
@@ -63,7 +81,10 @@ class Converter:  # TODO: find a better name so it doesn't conflict with the mod
                 break
             image = None
             full_dst_path = self.dst_path / file.relative_to(self.src_path)
-            print(f"\x1b[2KConverting {full_dst_path.name} to {self.selected_format}...", end="\r")
+            print(
+                f"\x1b[2KConverting {full_dst_path.name} to {self.selected_format}...",
+                end="\r",
+            )
             try:
                 image = Image.open(file)
             except UnidentifiedImageError:
@@ -96,15 +117,23 @@ class Converter:  # TODO: find a better name so it doesn't conflict with the mod
                 try:
                     image = Image.open(file)
                 except Exception as e:
-                    print(f"Failed to open {file.name} after disabling decompression bomb check: {e}")
+                    print(
+                        f"Failed to open {file.name} after disabling decompression bomb check: {e}"
+                    )
                     num_of_failed_conversions += 1
                     non_image_list.append(file)
                 finally:
                     Image.MAX_IMAGE_PIXELS = original_max_image_pixels
 
             if image:
-                max_width, max_height = MAX_RESOLUTION.get(self.selected_format, (None, None))
-                if max_width and max_height and (image.width > max_width or image.height > max_height):
+                max_width, max_height = MAX_RESOLUTION.get(
+                    self.selected_format, (None, None)
+                )
+                if (
+                    max_width
+                    and max_height
+                    and (image.width > max_width or image.height > max_height)
+                ):
                     if not self.downscale_all:
                         response = CTkMessagebox(
                             title=f"Image too large for {self.selected_format}",
@@ -129,12 +158,16 @@ class Converter:  # TODO: find a better name so it doesn't conflict with the mod
                         elif response.get() == "Downscale all":
                             self.downscale_all = True
 
-                    original_max = Image.MAX_IMAGE_PIXELS  # remove decomp bomb check for downscaling only
+                    original_max = (
+                        Image.MAX_IMAGE_PIXELS
+                    )  # remove decomp bomb check for downscaling only
                     Image.MAX_IMAGE_PIXELS = None
                     image.thumbnail((max_width, max_height))  # resizes the image
                     Image.MAX_IMAGE_PIXELS = original_max
 
-                if not self.gui.show_overwrite_dialogues(full_dst_path, are_you_sure, self.selected_format):
+                if not self.gui.show_overwrite_dialogues(
+                    full_dst_path, are_you_sure, self.selected_format
+                ):
                     num_of_skipped_files += 1
                     image.close()
                     self.gui.update_progressbar(  # TODO:this fails on repeated conversions. might be because it's not running in the gui thread.
@@ -162,7 +195,11 @@ class Converter:  # TODO: find a better name so it doesn't conflict with the mod
                 num_of_skipped_files,
                 image_list_length,
             )
-        if self.gui.post_conversion_dialogue(num_of_converted_files, len(non_image_list), len(already_formatted_images) if not reencode_images else 0):
+        if self.gui.post_conversion_dialogue(
+            num_of_converted_files,
+            len(non_image_list),
+            len(already_formatted_images) if not reencode_images else 0,
+        ):
             for file in non_image_list:  # TODO: this doesnt work for folders
                 copy2(
                     file,

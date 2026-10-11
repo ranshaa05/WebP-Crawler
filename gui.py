@@ -16,10 +16,15 @@ class Gui:
 
         self.root.iconbitmap(str(icon_path))
         self.root.title("WebP Crawler")
-        screen_width, screen_height = self.root.winfo_screenwidth(), self.root.winfo_screenheight()
+        screen_width, screen_height = (
+            self.root.winfo_screenwidth(),
+            self.root.winfo_screenheight(),
+        )
         min_window_size = "615x225"
-        window_size = f"{int(screen_width * 0.32)}x{int(screen_height * 0.21)}"
-        self.root.geometry(window_size if window_size >= min_window_size else min_window_size)
+        window_size = f"{int(screen_width * 0.3)}x{int(screen_height * 0.21)}"
+        self.root.geometry(
+            window_size if window_size >= min_window_size else min_window_size
+        )
         self.root.resizable(False, False)
         self.font = ("SegoeUI", 14)
         self.convert_button_font = ("SegoeUI", 14, "bold")
@@ -39,7 +44,9 @@ class Gui:
 
         self.progress = StringVar()
         self.progress.set("0%")
-        self.progressbar_percentage = DoubleVar()  # hacky way to include the "%" sign in the progressbar text
+        self.progressbar_percentage = (
+            DoubleVar()
+        )  # hacky way to include the "%" sign in the progressbar text
 
         # file overwrite variables
         self.overwrite_all = False
@@ -54,9 +61,13 @@ class Gui:
 
     def __make_widgets__(self):
         """define the widgets for the GUI."""
-        self.header = ctk.CTkLabel(self.root, text="──── WebP Crawler ────", font=("Helvetica", 20, "bold"))
+        self.header = ctk.CTkLabel(
+            self.root, text="──── WebP Crawler ────", font=("Helvetica", 20, "bold")
+        )
         self.box1_text = ctk.CTkLabel(self.root, text="Source folder:", font=self.font)
-        self.box2_text = ctk.CTkLabel(self.root, text="Destination folder:", font=self.font)
+        self.box2_text = ctk.CTkLabel(
+            self.root, text="Destination folder:", font=self.font
+        )
         self.convert_button = ctk.CTkButton(
             self.root,
             text="Convert",
@@ -92,7 +103,9 @@ class Gui:
         )
         self.format_dropdown.set("WebP")
 
-        self.progressbar_text = ctk.CTkLabel(self.root, textvariable=self.progress, font=self.font)
+        self.progressbar_text = ctk.CTkLabel(
+            self.root, textvariable=self.progress, font=self.font
+        )
 
         self.progressbar = ctk.CTkProgressBar(
             self.root,
@@ -114,24 +127,24 @@ class Gui:
     def __position_widgets__(self):
         """positions the UI elements inside the GUI."""
         self.header.grid(row=0, column=2, pady=(10, 0))
-        self.box1_text.grid(row=3, column=1, sticky="w", padx=(10, 0))
-        self.box2_text.grid(row=4, column=1, sticky="w", padx=(10, 0))
-        self.quality_text.grid(row=5, column=1, sticky="w", padx=(10, 0), pady=(5, 0))
-        self.quality_slider.grid(
-            row=6, column=1, sticky="w", padx=(10, 0), pady=(5, 0)
-        )
+        self.box1_text.grid(row=3, column=1, sticky="w", padx=(10, 0), pady=5)
+        self.box2_text.grid(row=4, column=1, sticky="w", padx=(10, 0), pady=5)
+        self.quality_text.grid(row=5, column=1, sticky="w", padx=(10, 0), pady=(10, 0))
+        self.quality_slider.grid(row=6, column=1, sticky="w", padx=(10, 0))
 
         self.include_subfolders_checkbox.grid(row=5, column=2, pady=(10, 0))
 
-        self.format_text.grid(row=5, column=3, sticky="w", pady=(15, 0))
-        self.format_dropdown.grid(row=5, column=3, sticky="w", padx=(50, 0), pady=(10, 0))
+        self.format_text.grid(row=5, column=3, sticky="w", pady=(10, 0))
+        self.format_dropdown.grid(
+            row=5, column=3, sticky="w", padx=(50, 0), pady=(10, 0)
+        )
         self.convert_button.grid(row=6, column=2)
         self.progressbar_text.grid(row=7, column=2)
         self.progressbar.grid(row=8, column=2)
 
         for i in range(2):
-            self.fields[i].grid(row=i + 3, column=2, pady=(5, 0))
-            self.browse_buttons[i].grid(row=i + 3, column=3, padx=(5, 0), pady=(5, 0))
+            self.fields[i].grid(row=i + 3, column=2, pady=5)
+            self.browse_buttons[i].grid(row=i + 3, column=3, padx=(5, 0), pady=5)
 
     def get_quality(self):
         quality = round(self.quality_slider.get())
@@ -159,7 +172,9 @@ class Gui:
         file_list_length,
     ):
         """updates the progress bar and its text."""
-        num_of_processed_files = num_of_image_files + num_of_failed_conversions + num_of_skipped_files
+        num_of_processed_files = (
+            num_of_image_files + num_of_failed_conversions + num_of_skipped_files
+        )
         progress_percentage = num_of_processed_files / file_list_length * 100
         self.progress.set(f"{int(progress_percentage)}%")
         self.progressbar_percentage.set(progress_percentage / 100)
@@ -167,15 +182,41 @@ class Gui:
     def update_convert_button(self, converter_instance, text):
         """updates the convert button."""
         if text == "stop":
-            self.convert_button.configure(state="normal", text=text.capitalize(), font=self.convert_button_font, fg_color=("light red", "red"), hover_color=("dark red"), command=lambda: converter_instance.request_stop_conversion())
+            self.convert_button.configure(
+                state="normal",
+                text=text.capitalize(),
+                font=self.convert_button_font,
+                fg_color=("light red", "red"),
+                hover_color=("dark red"),
+                command=lambda: converter_instance.request_stop_conversion(),
+            )
 
         elif text == "stopping":
-            self.convert_button.configure(state="disabled", text=text.capitalize(), font=self.convert_button_font, fg_color=("light red", "red"), hover_color=("dark red"), command=lambda: None)
+            self.convert_button.configure(
+                state="disabled",
+                text=text.capitalize(),
+                font=self.convert_button_font,
+                fg_color=("light red", "red"),
+                hover_color=("dark red"),
+                command=lambda: None,
+            )
 
         elif text == "convert":
-            self.convert_button.configure(state="normal", text=text.capitalize(), font=self.convert_button_font, fg_color=("light green", "green"), hover_color=("light red", "red"), command=lambda: converter.start_conversion_thread(self))
+            self.convert_button.configure(
+                state="normal",
+                text=text.capitalize(),
+                font=self.convert_button_font,
+                fg_color=("light green", "green"),
+                hover_color=("light red", "red"),
+                command=lambda: converter.start_conversion_thread(self),
+            )
 
-    def post_conversion_dialogue(self, num_of_converted_files, num_of_failed_conversions, num_of_already_formatted_images):
+    def post_conversion_dialogue(
+        self,
+        num_of_converted_files,
+        num_of_failed_conversions,
+        num_of_already_formatted_images,
+    ):
         """displays the corresponding dialogue after conversion."""
         if num_of_converted_files == 0:
             CTkMessagebox(
@@ -211,7 +252,9 @@ class Gui:
             )
             return False
 
-    def reencode_images_of_same_format_dialogue(self, selected_format, num_of_already_formatted_images):
+    def reencode_images_of_same_format_dialogue(
+        self, selected_format, num_of_already_formatted_images
+    ):
         if num_of_already_formatted_images == 0:
             return False
         reencode_images = CTkMessagebox(
