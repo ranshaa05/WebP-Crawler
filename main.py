@@ -16,6 +16,6 @@ def get_resource_path(*relative_paths):
 
 
 if __name__ == "__main__":
-    icon_path = get_resource_path("icon.ico")
+    (icon_path,) = get_resource_path("icon.ico")
     gui = Gui(icon_path)
     gui.root.mainloop()

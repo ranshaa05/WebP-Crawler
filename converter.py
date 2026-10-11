@@ -188,7 +188,7 @@ class Converter:  # TODO: find a better name so it doesn't conflict with the mod
     def __update_ui_params__(self):
         self.src_path = Path(self.gui.fields[0].get().strip())
         self.dst_path = Path(self.gui.fields[1].get().strip())
-        self.quality = self.gui.quality_dropdown.get()
+        self.quality = self.gui.get_quality()
         self.include_subfolders = self.gui.include_subfolders.get()
         self.selected_format = self.gui.format_dropdown.get().lower()
 

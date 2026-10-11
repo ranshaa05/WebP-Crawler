@@ -65,15 +65,19 @@ class Gui:
             hover_color=("light_red", "red"),
             command=lambda: converter.start_conversion_thread(self),
         )
-        self.quality_text = ctk.CTkLabel(self.root, text="Quality:", font=self.font)
-        self.quality_dropdown = ctk.CTkComboBox(
-            self.root,
-            state="readonly",
-            width=90,
-            values=["Lossless", *[str(i) for i in range(95, -1, -1)]],
-            font=self.font,
+        self.quality_value = StringVar(value="Quality: Lossless")
+        self.quality_text = ctk.CTkLabel(
+            self.root, textvariable=self.quality_value, font=self.font
         )
-        self.quality_dropdown.set("Lossless")
+        self.quality_slider = ctk.CTkSlider(
+            self.root,
+            from_=0,
+            to=101,
+            number_of_steps=101,
+            width=140,
+            command=self.update_quality_label,
+        )
+        self.quality_slider.set(101)
 
         self.format_text = ctk.CTkLabel(self.root, text="Format:", font=self.font)
         self.format_dropdown = ctk.CTkComboBox(
@@ -113,7 +117,9 @@ class Gui:
         self.box1_text.grid(row=3, column=1, sticky="w", padx=(10, 0))
         self.box2_text.grid(row=4, column=1, sticky="w", padx=(10, 0))
         self.quality_text.grid(row=5, column=1, sticky="w", padx=(10, 0), pady=(5, 0))
-        self.quality_dropdown.grid(row=5, column=1, sticky="w", padx=(60, 0), pady=(10, 0))
+        self.quality_slider.grid(
+            row=6, column=1, sticky="w", padx=(10, 0), pady=(5, 0)
+        )
 
         self.include_subfolders_checkbox.grid(row=5, column=2, pady=(10, 0))
 
@@ -126,6 +132,15 @@ class Gui:
         for i in range(2):
             self.fields[i].grid(row=i + 3, column=2, pady=(5, 0))
             self.browse_buttons[i].grid(row=i + 3, column=3, padx=(5, 0), pady=(5, 0))
+
+    def get_quality(self):
+        quality = round(self.quality_slider.get())
+        return "Lossless" if quality == 101 else str(quality)
+
+    def update_quality_label(self, value):
+        quality = round(value)
+        label = "Lossless" if quality == 101 else str(quality)
+        self.quality_value.set(f"Quality: {label}")
 
     def __browse__(self, path_field, field_num):
         """opens a file selection window and inserts the selected path into the corresponding entry field."""
