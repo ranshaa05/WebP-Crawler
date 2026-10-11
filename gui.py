@@ -20,11 +20,12 @@ class Gui:
             self.root.winfo_screenwidth(),
             self.root.winfo_screenheight(),
         )
-        min_window_size = "615x225"
-        window_size = f"{int(screen_width * 0.3)}x{int(screen_height * 0.21)}"
-        self.root.geometry(
-            window_size if window_size >= min_window_size else min_window_size
+        window_height, window_width = (
+            max(225, int(screen_height * 0.20)),
+            max(615, int(screen_width * 0.3)),
         )
+        self.root.geometry(f"{window_width}x{window_height}")
+        self.root.minsize(615, 240)
         self.root.resizable(False, False)
         self.font = ("SegoeUI", 14)
         self.convert_button_font = ("SegoeUI", 14, "bold")
@@ -130,17 +131,20 @@ class Gui:
         self.box1_text.grid(row=3, column=1, sticky="w", padx=(10, 0), pady=5)
         self.box2_text.grid(row=4, column=1, sticky="w", padx=(10, 0), pady=5)
         self.quality_text.grid(row=5, column=1, sticky="w", padx=(10, 0), pady=(10, 0))
-        self.quality_slider.grid(row=6, column=1, sticky="w", padx=(10, 0))
+        self.quality_slider.grid(row=6, column=1, sticky="w", padx=(10, 0), pady=(8, 0))
 
         self.include_subfolders_checkbox.grid(row=5, column=2, pady=(10, 0))
 
-        self.format_text.grid(row=5, column=3, sticky="w", pady=(10, 0))
+        self.format_text.grid(
+            row=5, column=2, columnspan=2, sticky="e",
+            padx=(0, self.format_dropdown.cget("width") + 6), pady=(10, 0)
+        )
         self.format_dropdown.grid(
             row=5, column=3, sticky="w", padx=(50, 0), pady=(10, 0)
         )
-        self.convert_button.grid(row=6, column=2)
+        self.convert_button.grid(row=6, column=2, pady=(8, 0))
         self.progressbar_text.grid(row=7, column=2)
-        self.progressbar.grid(row=8, column=2)
+        self.progressbar.grid(row=8, column=2, pady=(0, 12))
 
         for i in range(2):
             self.fields[i].grid(row=i + 3, column=2, pady=5)
